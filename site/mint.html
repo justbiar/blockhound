@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HOUND ve BlockHound mint</title>
+  <meta name="description" content="HOUND tokenı ve BlockHound NFT'leri iş kanıtıyla basılır: hash'i herkes arayabilir, yalnızca Binance Agent ID sahibi cüzdanlar mintler. Arz sınırsız, zorluk her dönemde iki katına çıkar.">
+  <meta name="theme-color" content="#111111">
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400&family=Inter:wght@400;500;600&family=Fira+Code:wght@400&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="atla" href="#ana" data-i18n="atla">İçeriğe geç</a>
+  <header class="ust">
+    <a class="marka" href="index.html" aria-label="Blockhound"><img src="logo.svg" alt="" width="32" height="32"><span>Blockhound</span></a>
+    <nav class="menu" aria-label="Bölümler">
+      <a href="index.html" data-i18n="m_ana">Ana sayfa</a>
+      <a href="#zorluk" data-i18n="m_zorluk">Zorluk</a>
+      <a href="#prompt" data-i18n="m_prompt">Ajan promptu</a>
+      <a href="#kontratlar" data-i18n="m_kontrat">Kontratlar</a>
+      <a href="#nasil" data-i18n="m_nasil">Nasıl çalışır</a>
+      <a href="#botlar" data-i18n="m_bot">Botlar için</a>
+      <a href="https://github.com/justbiar/blockhound/tree/main/contracts" class="gh" rel="noopener" data-i18n="m_kod">Kontrat kodu</a>
+    </nav>
+    <div class="dil" role="group" aria-label="Dil / Language">
+      <button type="button" data-dil="tr" aria-pressed="true">TR</button>
+      <button type="button" data-dil="en" aria-pressed="false">EN</button>
+    </div>
+  </header>
+
+  <main id="ana">
+    <section class="mint-ust">
+      <p class="ust-yazi" data-i18n="u_ust">İş kanıtıyla mint</p>
+      <h1 data-i18n="u_baslik">Hash'i bul, köpeği bas.</h1>
+      <p class="alt" data-i18n="u_alt">HOUND ve BlockHound'u kimse önceden basmadı. Hash'i herkes arayabilir ama yalnızca Binance Agent ID sahibi cüzdanlar mintleyebilir. Arz sınırsız, her dönemde zorluk iki katına çıkar: bir süre sonra mint pratikte imkânsız hale gelir.</p>
+      <div id="durum-yayin" class="bilgi-serit" role="status"></div>
+      <form class="ajan-form" id="ajan-form">
+        <label for="ajan" data-i18n="a_etiket">Hangi ajan için arayalım? Agent ID adı ya da ajan cüzdan adresi</label>
+        <div class="ajan-satir">
+          <input id="ajan" name="ajan" type="text" autocomplete="off" spellcheck="false" placeholder="biar.ai" required>
+          <button type="submit" class="dugme ana" data-i18n="a_bul">Ajanı bul</button>
+        </div>
+        <p id="ajan-durum" class="kucuk-yazi" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="mint-kartlar" aria-label="Mint">
+      <article class="mint-kart" data-tur="hound">
+        <header>
+          <p class="ust-yazi">HOUND</p>
+          <h2 data-i18n="h_baslik">10.000 HOUND</h2>
+          <p class="kucuk-yazi" data-i18n="h_alt">ERC-20 · bir çözüm başına sabit ödül · her 1.000 mintte bir bit zorlaşır</p>
+        </header>
+        <dl class="olcu">
+          <div><dt data-i18n="o_ucret">Ücret</dt><dd data-alan="ucret">0.50 $</dd></div>
+          <div><dt data-i18n="o_zorluk">Zorluk</dt><dd data-alan="zorluk">—</dd></div>
+          <div><dt data-i18n="o_basilan">Basılan</dt><dd data-alan="basilan">—</dd></div>
+          <div><dt data-i18n="o_kalan">Zorlaşmaya</dt><dd data-alan="kalan">—</dd></div>
+        </dl>
+        <div class="ilerleme" aria-hidden="true"><span data-alan="donem-cubuk"></span></div>
+        <div class="madenci">
+          <p class="kucuk-yazi" data-alan="tahmin"></p>
+          <div class="dugmeler">
+            <button type="button" class="dugme ana" data-is="kaz" data-i18n="d_kaz">Hash ara</button>
+            <button type="button" class="dugme" data-is="dur" hidden data-i18n="d_dur">Durdur</button>
+          </div>
+          <p class="durum" data-alan="durum" role="status" aria-live="polite"></p>
+          <div class="komut" data-alan="komut" hidden>
+            <p class="kucuk-yazi" data-i18n="k_aciklama">Bu iki komutu ajan cüzdanının bağlı olduğu bilgisayarda sırayla çalıştır. İlki önizler ve bir requestId verir, ikincisi o kimlikle gönderir.</p>
+            <pre class="kod"><code data-alan="komut-metni"></code></pre>
+            <button type="button" class="dugme" data-is="kopyala" data-i18n="d_kopyala">Komutları kopyala</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="mint-kart" data-tur="blockhound">
+        <header>
+          <p class="ust-yazi">BlockHound</p>
+          <h2 data-i18n="n_baslik">1 BlockHound NFT</h2>
+          <p class="kucuk-yazi" data-i18n="n_alt">ERC-721 · görsel zincir üstünde, senin hash'inden türer · her 250 mintte bir bit zorlaşır</p>
+        </header>
+        <div class="nft-onizleme" data-alan="onizleme" role="img" aria-label="BlockHound örnek görsel"></div>
+        <dl class="olcu">
+          <div><dt data-i18n="o_ucret">Ücret</dt><dd data-alan="ucret">0.10 $</dd></div>
+          <div><dt data-i18n="o_zorluk">Zorluk</dt><dd data-alan="zorluk">—</dd></div>
+          <div><dt data-i18n="o_basilan">Basılan</dt><dd data-alan="basilan">—</dd></div>
+          <div><dt data-i18n="o_kalan">Zorlaşmaya</dt><dd data-alan="kalan">—</dd></div>
+        </dl>
+        <div class="ilerleme" aria-hidden="true"><span data-alan="donem-cubuk"></span></div>
+        <div class="madenci">
+          <p class="kucuk-yazi" data-alan="tahmin"></p>
+          <div class="dugmeler">
+            <button type="button" class="dugme ana" data-is="kaz" data-i18n="d_kaz">Hash ara</button>
+            <button type="button" class="dugme" data-is="dur" hidden data-i18n="d_dur">Durdur</button>
+          </div>
+          <p class="durum" data-alan="durum" role="status" aria-live="polite"></p>
+          <div class="komut" data-alan="komut" hidden>
+            <p class="kucuk-yazi" data-i18n="k_aciklama">Bu iki komutu ajan cüzdanının bağlı olduğu bilgisayarda sırayla çalıştır. İlki önizler ve bir requestId verir, ikincisi o kimlikle gönderir.</p>
+            <pre class="kod"><code data-alan="komut-metni"></code></pre>
+            <button type="button" class="dugme" data-is="kopyala" data-i18n="d_kopyala">Komutları kopyala</button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="hiz-satir">
+      <label for="isci-sayi" data-i18n="i_etiket">İşlemci çekirdeği</label>
+      <input type="range" id="isci-sayi" min="1" max="16" value="4">
+      <output id="isci-deger" for="isci-sayi">4</output>
+      <span class="kucuk-yazi" id="hiz">—</span>
+    </section>
+
+    <section id="zorluk" class="bolum">
+      <h2 data-i18n="z_baslik">Zorluk nasıl artıyor</h2>
+      <p class="alt" data-i18n="z_alt">Her dönemde zorluk bir bit artar ve bir mint için gereken ortalama hash iki katına çıkar. Grafik, mint sayısı ilerledikçe bir mintin aynı donanımla ne kadar süreceğini gösterir. Dikey eksen logaritmiktir: her çizgi bir öncekinin katlarıdır.</p>
+      <div class="grafik-ust">
+        <div class="sekme" role="group" aria-label="Koleksiyon">
+          <button type="button" data-grafik="hound" aria-pressed="true">HOUND</button>
+          <button type="button" data-grafik="blockhound" aria-pressed="false">BlockHound</button>
+        </div>
+        <ul class="lejant" aria-label="Seriler">
+          <li><span class="lejant-isaret" style="--renk: var(--seri-1)"></span><span data-i18n="z_seri1">Tarayıcı (yaklaşık 3 MH/s)</span></li>
+          <li><span class="lejant-isaret kesik" style="--renk: var(--seri-2)"></span><span data-i18n="z_seri2">Ekran kartı (yaklaşık 1 GH/s)</span></li>
+        </ul>
+      </div>
+      <p class="zorluk-simdi" id="zorluk-simdi" role="status" aria-live="polite"></p>
+      <figure class="grafik">
+        <div id="zorluk-grafik" class="grafik-alan"></div>
+        <div id="grafik-ipucu" class="ipucu" role="status" hidden></div>
+        <figcaption class="kucuk-yazi" id="grafik-not"></figcaption>
+      </figure>
+      <details class="tablo-ac">
+        <summary data-i18n="z_tablo">Tablo olarak göster</summary>
+        <div class="tablo-kap"><table id="zorluk-tablo"></table></div>
+      </details>
+    </section>
+
+    <section id="prompt" class="bolum">
+      <h2 data-i18n="p_baslik">Ajanına mintlet</h2>
+      <p class="alt" data-i18n="p_alt">Binance Agentic Wallet'a (baw) erişimi olan bir yapay zekâ ajanın varsa, aşağıdaki promptu ona ver. Hash'i bulur, önizlemeyi kontrol eder ve göndermeden önce senden onay ister.</p>
+      <div class="sekme" role="group" aria-label="Prompt">
+        <button type="button" data-prompt="hound" aria-pressed="true">HOUND</button>
+        <button type="button" data-prompt="blockhound" aria-pressed="false">BlockHound</button>
+      </div>
+      <pre class="kod prompt-kutu"><code id="prompt-metni"></code></pre>
+      <div class="dugmeler">
+        <button type="button" class="dugme ana" id="prompt-kopyala" data-i18n="p_kopyala">Promptu kopyala</button>
+        <span class="kucuk-yazi" id="prompt-durum" role="status" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <section id="kontratlar" class="bolum">
+      <h2 data-i18n="kt_baslik">Kontratlar</h2>
+      <p class="alt" data-i18n="kt_alt">İki kontrat da BNB Smart Chain'de yayında ve kaynak kodu BscScan'de doğrulandı. Sahipleri yoktur: aşağıdaki değerler kurulumda sabitlendi ve kimse değiştiremez.</p>
+      <div class="kontrat-kartlar">
+        <div class="kart">
+          <h3>HOUND <span class="rozet" data-i18n="kt_rozet">Doğrulandı</span></h3>
+          <p class="adres-satir"><code>0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac</code></p>
+          <div class="dugmeler">
+            <a class="dugme" href="https://bscscan.com/address/0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac#code" rel="noopener" data-i18n="kt_bscscan">BscScan'de kod</a>
+            <button type="button" class="dugme" data-kopyala="0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac" data-i18n="kt_kopyala">Adresi kopyala</button>
+          </div>
+          <dl class="ozellik">
+            <div><dt data-i18n="kt_tur">Tür</dt><dd>ERC-20 · HOUND · 18</dd></div>
+            <div><dt data-i18n="kt_odul">Mint başına</dt><dd>10.000 HOUND</dd></div>
+            <div><dt data-i18n="kt_ucret">Ücret</dt><dd>0.50 $</dd></div>
+            <div><dt data-i18n="kt_donem">Zorlaşma</dt><dd data-i18n="kt_donem_h">her 1.000 mintte +1 bit</dd></div>
+          </dl>
+        </div>
+        <div class="kart">
+          <h3>BlockHound <span class="rozet" data-i18n="kt_rozet">Doğrulandı</span></h3>
+          <p class="adres-satir"><code>0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd</code></p>
+          <div class="dugmeler">
+            <a class="dugme" href="https://bscscan.com/address/0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd#code" rel="noopener" data-i18n="kt_bscscan">BscScan'de kod</a>
+            <button type="button" class="dugme" data-kopyala="0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd" data-i18n="kt_kopyala">Adresi kopyala</button>
+          </div>
+          <dl class="ozellik">
+            <div><dt data-i18n="kt_tur">Tür</dt><dd>ERC-721 · BHOUND</dd></div>
+            <div><dt data-i18n="kt_odul">Mint başına</dt><dd>1 NFT</dd></div>
+            <div><dt data-i18n="kt_ucret">Ücret</dt><dd>0.10 $</dd></div>
+            <div><dt data-i18n="kt_donem">Zorlaşma</dt><dd data-i18n="kt_donem_n">her 250 mintte +1 bit</dd></div>
+          </dl>
+        </div>
+      </div>
+      <dl class="ozellik ortak">
+        <div><dt data-i18n="kt_basla">Başlangıç zorluğu</dt><dd data-i18n="kt_basla_d">20 bit (ortalama 1 milyon hash)</dd></div>
+        <div><dt data-i18n="kt_kasa">Ücretlerin gittiği kasa</dt><dd><code>0x5b72c750D40F7EcB56A305087F0920DF2043c350</code></dd></div>
+        <div><dt data-i18n="kt_kayit">Agent ID kaydı (Binance)</dt><dd><code>0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F</code></dd></div>
+        <div><dt data-i18n="kt_fiyat">Fiyat kaynağı (Chainlink BNB/USD)</dt><dd><code>0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE</code></dd></div>
+      </dl>
+    </section>
+
+    <section id="nasil" class="bolum">
+      <h2 data-i18n="na_baslik">Nasıl çalışır</h2>
+      <ol class="adimlar">
+        <li><span class="adim-no">01</span><h3 data-i18n="na1_b">Ajanı seç, hash ara</h3><p data-i18n="na1_m">Agent ID adını yazarsın, cüzdan adresi zincirdeki kayıttan okunur. Tarayıcın kontratın o dönemki bulmacası, o adres ve rastgele bir sayıdan keccak256 hash'leri üretir. Başında yeterince sıfır bit olan ilk hash çözümdür.</p></li>
+        <li><span class="adim-no">02</span><h3 data-i18n="na2_b">Sadece sana ait</h3><p data-i18n="na2_m">Hash'i herkes arayabilir: kendin, ekran kartın ya da bir arkadaşın. Ama ajanın adresi hash'in içinde olduğu için çözüm yalnızca o Agent ID cüzdanında işe yarar, mempool'dan kopyalanamaz.</p></li>
+        <li><span class="adim-no">03</span><h3 data-i18n="na3_b">Mintle</h3><p data-i18n="na3_m">Çözüm bulununca sayfa iki baw komutu verir; ajan cüzdanınla gönderirsin (Binance App'te Geliştirici Modu açık olmalı). Kontrat göndereni Agent ID kaydından kontrol eder. Ücret dolar cinsinden sabittir, fazlası iade edilir.</p></li>
+        <li><span class="adim-no">04</span><h3 data-i18n="na4_b">Her dönem iki kat</h3><p data-i18n="na4_m">HOUND'da her 1.000, BlockHound'da her 250 mintte zorluk bir bit artar. Bilgisayar gücü aynı kalırsa bir mint için geçen süre her dönemde iki katına çıkar.</p></li>
+      </ol>
+      <p class="uyari" data-i18n="na_uyari">HOUND ve BlockHound yatırım ürünü değildir. Kâr, getiri ya da fiyat vaadi yoktur; değerleri sıfır olabilir. Kontratların sahibi yoktur, ücretler Blockhound geliştirmesine destek olarak proje kasasına gider. Kod denetlenmemiştir.</p>
+    </section>
+
+    <section id="botlar" class="bolum">
+      <h2 data-i18n="b_baslik">Botlar ve kendi madencin</h2>
+      <p class="alt" data-i18n="b_alt">Agent ID'li bir otomatik mint sistemin varsa HOUND'u da basabilir: tek şart çözümü bulmak. Ekran kartı, bot ya da komut satırı, kurallar herkes için aynı.</p>
+      <pre class="kod"><code>challenge() view returns (bytes32)
+difficultyBits() view returns (uint256)
+mintFee() view returns (uint256)       // wei
+check(address miner, uint256 nonce) view returns (bytes32, bool)
+isAgent(address account) view returns (bool)
+mint(uint256 nonce) payable
+
+keccak256(abi.encodePacked(challenge(), msg.sender, nonce)) &lt;= type(uint256).max &gt;&gt; difficultyBits()</code></pre>
+      <p class="not" data-i18n="b_not">Depodaki komut satırı madencisi çözümü bulur ve gönderilecek baw komutlarını yazar; anahtara dokunmaz:</p>
+      <pre class="kod"><code>node scripts/hound-madenci.js hound biar.ai</code></pre>
+    </section>
+  </main>
+
+  <footer class="alt-bilgi">
+    <div class="marka kucuk"><img src="logo.svg" alt="" width="24" height="24"><span>Blockhound</span></div>
+    <p data-i18n="f_m">Bağımsız, açık kaynaklı (MIT) bir projedir; Binance, OKX ya da başka bir kuruluşla bağlantısı yoktur. Hiçbir içerik yatırım tavsiyesi değildir.</p>
+    <a class="gh-alt" href="https://github.com/justbiar/blockhound" rel="noopener">GitHub</a>
+  </footer>
+  <script type="module" src="hound/mint.js"></script>
+  <script type="module" src="hound/sayfa.js"></script>
+</body>
+</html>

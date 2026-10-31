@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="api-token" content="__API_TOKEN__">
+  <title>Blockhound</title>
+  <meta name="description" content="Blockhound: BSC'de yeni mintleri ilk bloktan koklayan, ücretsiz olanları otomatik mintleyen ajan terminali">
+  <meta name="theme-color" content="#111111">
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400&family=Inter:wght@400;500;600&family=Fira+Code:wght@400;600&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="ust">
+    <div class="marka"><img src="logo.svg" alt="" width="30" height="30"><span>Blockhound</span></div>
+    <span id="mod" class="rozet">…</span>
+    <span id="limit" class="ust-bilgi"></span>
+    <div class="ust-sag">
+      <button type="button" id="ust-cuzdan" class="cuzdan-cip" data-git="cuzdan">Cüzdan…</button>
+      <button type="button" id="acil-btn" class="dugme tehlike">Acil durdur</button>
+    </div>
+  </header>
+
+  <div class="serit" id="oturum-uyari" hidden>
+    <span id="oturum-uyari-metin"></span>
+    <button type="button" class="dugme" data-baglan>QR ile bağlan</button>
+  </div>
+
+  <div class="modal" id="giris-modal" hidden role="dialog" aria-modal="true" aria-labelledby="giris-baslik">
+    <div class="modal-kutu">
+      <h2 id="giris-baslik">Binance cüzdanını bağla</h2>
+      <ol class="adimlar">
+        <li>Telefonda <b>Binance App</b>'i aç ve QR tarayıcıyı başlat.</li>
+        <li>Aşağıdaki QR kodu okut.</li>
+        <li>Uygulamada görünen kodun <b>aşağıdaki eşleştirme koduyla aynı</b> olduğunu kontrol et ve onayla.</li>
+      </ol>
+      <div class="qr-alan">
+        <div class="qr-kutu"><img id="giris-qr" alt="Binance giriş QR kodu"><div id="giris-qr-ust" class="qr-ust" hidden></div></div>
+        <div class="qr-yan">
+          <small>Eşleştirme kodu</small>
+          <div class="kod" id="eslesme">······</div>
+          <small>Kalan süre</small>
+          <div id="giris-sayac" class="sayac">–</div>
+          <div id="giris-durum" class="soluk">Kod hazırlanıyor…</div>
+        </div>
+      </div>
+      <div class="satir-dugmeler">
+        <button type="button" class="dugme ana" id="giris-yeni">Yeni kod</button>
+        <a id="giris-link" class="dugme" target="_blank" rel="noopener">Giriş sayfasını aç</a>
+        <button type="button" class="dugme" id="giris-kapat">Kapat</button>
+      </div>
+      <p class="not">Kod Binance'ten gelir ve yaklaşık 5 dakika geçerlidir. Bağlantı en fazla 7 gün sürer, 48 saat işlem yapılmazsa düşer.</p>
+    </div>
+  </div>
+
+  <div class="duzen">
+    <nav class="yan" aria-label="Bölümler">
+      <button type="button" data-gorunum="siper" class="aktif"><span>Siper</span><small>Yeni lansmanlar</small></button>
+      <button type="button" data-gorunum="portfoy"><span>Portföy</span><small>Elindekiler, K/Z</small></button>
+      <button type="button" data-gorunum="emirler"><span>Emirler</span><small>İşlem geçmişi</small></button>
+      <button type="button" data-gorunum="otomasyon"><span>Otomasyon</span><small>Sniper, oto satış</small></button>
+      <button type="button" data-gorunum="mintler"><span>Mintler</span><small>Ücretsiz mint takibi</small></button>
+      <button type="button" data-gorunum="liderler"><span>Liderler</span><small>En çok kazanan cüzdanlar</small></button>
+      <button type="button" data-gorunum="hound"><span>HOUND</span><small>Token ve NFT takibi</small></button>
+      <button type="button" data-gorunum="basim"><span>Basım</span><small>Four.meme'de token bas</small></button>
+      <button type="button" data-gorunum="cuzdan"><span>Cüzdan</span><small>Bağlantı, bakiye</small></button>
+      <button type="button" data-gorunum="ayarlar"><span>Ayarlar</span><small>Bildirimler</small></button>
+    </nav>
+
+    <main class="icerik">
+      <!-- SİPER -->
+      <section class="gorunum" data-gorunum="siper">
+        <div class="bolum-bas">
+          <div>
+            <h1>Siper</h1>
+            <p class="alt">Agent ID'ye özel Four.meme lansmanları · Binance Web3 resmi listesi · <span id="siper-durum"></span></p>
+          </div>
+        </div>
+        <div class="filtreler">
+          <input id="f-ara" placeholder="Sembol, ad ya da adres ara" autocomplete="off">
+          <label>Min holder <input id="f-holder" inputmode="numeric" placeholder="0"></label>
+          <label>Maks top10 % <input id="f-top10" inputmode="decimal" placeholder="100"></label>
+          <label>Min MC $ <input id="f-mc" inputmode="decimal" placeholder="0"></label>
+          <label class="secim"><input type="checkbox" id="f-devsatti"> Dev satanları gizle</label>
+          <label class="secim"><input type="checkbox" id="f-ses"> Yeni lansmanda ses</label>
+        </div>
+        <div class="sutunlar" id="siper-kart">
+          <div class="sutun"><h3>Yeni <span id="say-yeni"></span></h3><div id="s-yeni" class="liste"></div></div>
+          <div class="sutun"><h3>Dolmak üzere <span id="say-bitmekUzere"></span></h3><div id="s-bitmekUzere" class="liste"></div></div>
+          <div class="sutun"><h3>DEX'te <span id="say-dex"></span></h3><div id="s-dex" class="liste"></div></div>
+        </div>
+        <p class="not">Boş alan "bilinmiyor" demektir, sıfır değil. Bonding curve aşamasında bu tokenleri sadece Agent ID sahipleri alıp satabilir.</p>
+      </section>
+
+      <!-- PORTFÖY -->
+      <section class="gorunum" data-gorunum="portfoy" hidden>
+        <div class="bolum-bas">
+          <div><h1>Portföy</h1><p class="alt">Cüzdanın tüm zincir geçmişinden hesaplanır: mintler, alımlar, satışlar, transferler ve gas · <span id="pnl-durum">…</span></p></div>
+          <button type="button" class="dugme" id="portfoy-yenile">Yenile</button>
+        </div>
+        <details class="katlanir piyasa-kart" id="piyasa-kat">
+          <summary>Piyasası açılmayı bekleyen tokenler <span class="soluk" id="piyasa-ozet"></span></summary>
+          <p class="alt">Mint edilen tokenlerin çoğunda havuz mint bitince ya da proje sahibi açınca kurulur. Fiyatı olmayan tokenler 10 dakikada bir kontrol edilir; fiyat oluştuğu an bildirim gelir. En iyi satış fırsatı genelde ilk dakikalardır.</p>
+          <div class="tablo-kap"><table>
+            <thead><tr><th>Token</th><th>Elindeki</th><th>İzleniyor</th><th>Son kontrol</th><th>Durum</th></tr></thead>
+            <tbody id="piyasa-liste"><tr><td colspan="5" class="soluk">Yükleniyor…</td></tr></tbody>
+          </table></div>
+          <div class="satir-dugmeler"><button type="button" class="dugme" id="piyasa-kontrol">Şimdi kontrol et</button><span class="soluk" id="piyasa-mesaj"></span></div>
+        </details>
+        <div class="sekme portfoy-sekme" role="radiogroup" aria-label="Portföy bölümü" id="portfoy-bolum">
+          <label><input type="radio" name="portfoy-bolum" value="normal" checked><span>Normal</span></label>
+          <label><input type="radio" name="portfoy-bolum" value="agent"><span>Agent <small id="agent-sayi"></small></span></label>
+        </div>
+
+        <div id="portfoy-agent" hidden>
+          <p class="alt agent-aciklama">Ajanların senin onayın olmadan, otomatik mintledikleri. Elle "Mint et" ile yaptıkların ve diğer her şey Normal bölümünde.</p>
+          <div class="pnl-kartlar" id="agent-kartlar"></div>
+          <div class="tablo-kap">
+            <table>
+              <thead><tr><th>Zaman</th><th>Mint</th><th>Gelen</th><th>Ödenen</th><th>Gas</th><th>Bugünkü değer</th><th>İşlem</th></tr></thead>
+              <tbody id="agent-mintler"><tr><td colspan="7" class="soluk">Yükleniyor…</td></tr></tbody>
+            </table>
+          </div>
+          <p class="not">Maliyet ödenen BNB ve gasın bugünkü BNB fiyatıyla karşılığıdır. Yapay zekâ gideri OpenRouter'ın bu anahtar için bildirdiği toplam harcamadır: ajanlar her mint'i değil, adayları bulmak için yüzlercesini araştırır, bu yüzden tamamı Agent portföyünün gideri sayılır. NFT'lerin ve havuzu olmayan tokenlerin fiyatı yok: değere 0 olarak girer.</p>
+
+          <div class="grafik-bas maliyet-bas">
+            <h2 class="kart-baslik">Maliyet paneli</h2>
+            <button type="button" class="dugme" id="maliyet-yenile">Yenile</button>
+          </div>
+          <div class="pnl-kartlar" id="maliyet-kartlar"><div class="soluk">Yükleniyor…</div></div>
+          <div class="oto-izgara maliyet-tablolar">
+            <div class="tablo-kap"><table><thead><tr><th>Adım</th><th>Çağrı</th><th>Ücretsiz</th><th>Tutar</th></tr></thead><tbody id="maliyet-ajanlar"></tbody></table></div>
+            <div class="tablo-kap"><table><thead><tr><th>Model</th><th>Çağrı</th><th>Tutar</th></tr></thead><tbody id="maliyet-modeller"></tbody></table></div>
+          </div>
+          <p class="not" id="maliyet-not"></p>
+        </div>
+
+        <div id="portfoy-normal">
+        <p class="not" id="normal-not" hidden></p>
+        <div id="pnl-uyari"></div>
+        <div class="pnl-kartlar" id="pnl-kartlar"></div>
+        <p class="not" id="pnl-fiyatsiz" hidden></p>
+
+        <div class="kart pnl-grafik-kart">
+          <div class="grafik-bas">
+            <h2 class="kart-baslik">Zaman içinde</h2>
+            <div class="sekme kucuk" role="radiogroup" id="pnl-seri-sec">
+              <label><input type="radio" name="pnl-seri" value="net" checked><span>Net kâr / zarar</span></label>
+              <label><input type="radio" name="pnl-seri" value="deger"><span>Portföy değeri</span></label>
+            </div>
+          </div>
+          <div id="pnl-grafik" class="grafik"></div>
+          <p class="not" id="pnl-grafik-not"></p>
+        </div>
+
+        <h2>Nereden geldi</h2>
+        <div class="tablo-kap">
+          <table>
+            <thead><tr><th>Kaynak</th><th>Varlık</th><th>İşlem</th><th>Maliyet</th><th>Bugünkü değer</th><th>Fiyatı bilinmeyen</th></tr></thead>
+            <tbody id="pnl-kategoriler"></tbody>
+          </table>
+        </div>
+
+        <h2>Tokenler</h2>
+        <div class="tablo-kap" id="portfoy-kart">
+          <table>
+            <thead><tr><th>Token</th><th>Miktar</th><th>Ort. maliyet</th><th>Fiyat</th><th>Değer</th><th>Gerçekleşmemiş</th><th>Gerçekleşen</th><th>Toplam</th><th></th></tr></thead>
+            <tbody id="portfoy"><tr><td colspan="9" class="soluk">Yükleniyor…</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="kart sat-kart" id="sat-kart" hidden>
+          <div class="grafik-bas">
+            <h2 class="kart-baslik" id="sat-baslik">Sat</h2>
+            <button type="button" class="dugme" id="sat-kapat">Kapat</button>
+          </div>
+          <p class="alt" id="sat-bilgi"></p>
+          <div class="sekme kucuk" role="radiogroup">
+            <label><input type="radio" name="sat-mod" value="hemen" checked><span>Hemen sat</span></label>
+            <label><input type="radio" name="sat-mod" value="emir"><span>Fiyat emri</span></label>
+          </div>
+          <form id="sat-form" autocomplete="off">
+            <div class="alan-izgara">
+              <label>Miktar
+                <span class="hizli" data-hizli="miktar"><button type="button" data-yuzde="25">%25</button><button type="button" data-yuzde="50">%50</button><button type="button" data-yuzde="100">Hepsi</button></span>
+                <input name="miktar" inputmode="decimal" required>
+              </label>
+              <label class="emir-alani">Emir türü
+                <select name="tur"><option value="kar-al">Kâr al: fiyat şuna çıkınca sat</option><option value="zarar-kes">Zarar kes: fiyat şuna inerse sat</option></select>
+              </label>
+              <label class="emir-alani">Tetik fiyatı (USD)
+                <span class="hizli" data-hizli="tetik"></span>
+                <input name="tetik" inputmode="decimal">
+              </label>
+              <label class="emir-alani">Nerede beklesin
+                <select name="yer"><option value="binance">Binance'te (bilgisayar kapalıyken de)</option><option value="terminal">Bu terminalde (açık olmalı)</option></select>
+              </label>
+              <label>Kayma % <input name="kayma" inputmode="decimal" placeholder="varsayılan"></label>
+            </div>
+            <p class="not" id="sat-aciklama"></p>
+            <div class="satir-dugmeler"><button type="submit" class="dugme ana" id="sat-gonder">Devam</button><span id="sat-mesaj" class="soluk"></span></div>
+            <div class="onay-cubuk" id="sat-onay" hidden>
+              <span id="sat-onay-metin"></span>
+              <button type="button" class="dugme tehlike" id="sat-onay-evet">Evet</button>
+              <button type="button" class="dugme" id="sat-onay-hayir">Vazgeç</button>
+            </div>
+          </form>
+        </div>
+
+        <h2>Fiyat emirleri</h2>
+        <div class="tablo-kap">
+          <table>
+            <thead><tr><th>Token</th><th>Tür</th><th>Tetik</th><th>Miktar</th><th>Nerede</th><th>Durum</th><th>Kuruldu</th><th></th></tr></thead>
+            <tbody id="fiyat-emirleri"><tr><td colspan="8" class="soluk">Emir yok</td></tr></tbody>
+          </table>
+        </div>
+        <p class="not">Kâr al emirleri Binance'te bekleyebilir. Zarar kes ve "bu terminalde" emirleri sadece terminal açıkken çalışır: fiyat art arda iki kontrolde (15 saniye arayla) tetiği geçince normal satış akışıyla satar. Emir kurulurken fiyat tetiği zaten geçmişse emir reddedilir, anında satış için "Hemen sat"ı kullan.</p>
+
+        <div class="kart pnl-token-kart" id="pnl-token" hidden>
+          <div class="grafik-bas">
+            <h2 class="kart-baslik" id="pnl-token-baslik">Token</h2>
+            <div class="sekme kucuk" role="radiogroup" id="pnl-token-aralik">
+              <label><input type="radio" name="pnl-aralik" value="minute"><span>Dakika</span></label>
+              <label><input type="radio" name="pnl-aralik" value="hour" checked><span>Saat</span></label>
+              <label><input type="radio" name="pnl-aralik" value="day"><span>Gün</span></label>
+            </div>
+            <button type="button" class="dugme" id="pnl-token-kapat">Kapat</button>
+          </div>
+          <div id="pnl-token-grafik" class="grafik"></div>
+          <p class="not">Mumlar GeckoTerminal'in havuz verisinden gelir. Oklar senin alış ve satışların, kesikli çizgi ortalama maliyetin.</p>
+        </div>
+
+        <h2>NFT'ler</h2>
+        <p class="alt" id="nft-ozet"></p>
+        <div class="tablo-kap">
+          <table>
+            <thead><tr><th>Koleksiyon</th><th>Adet</th><th>Maliyet</th><th>Nasıl geldi</th><th>Token ID</th><th>Son işlem</th></tr></thead>
+            <tbody id="nft"><tr><td colspan="6" class="soluk">Yükleniyor…</td></tr></tbody>
+          </table>
+        </div>
+        <p class="not">BSC'de NFT taban fiyatı için ücretsiz bir kaynak yok: NFT'ler maliyetleriyle gösterilir ve toplam değere 0 olarak girer. Satıldıklarında gelen BNB gerçekleşen kâr olarak yazılır. NFT satmak bir pazar yeri ister (BSC'de Element): şimdilik NFT'leri pazar yerinin kendi sitesinden satabilirsin.</p>
+        </div>
+      </section>
+
+      <!-- EMİRLER -->
+      <section class="gorunum" data-gorunum="emirler" hidden>
+        <div class="bolum-bas"><div><h1>Emirler</h1><p class="alt">Bu oturumdaki tüm emirler, son 200</p></div></div>
+        <div class="tablo-kap">
+          <table>
+            <thead><tr><th>Zaman</th><th>Yön</th><th>Token</th><th>Miktar</th><th>Durum</th><th>Ayrıntı</th></tr></thead>
+            <tbody id="emirler"><tr><td colspan="6" class="soluk">Henüz emir yok</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- OTOMASYON -->
+      <section class="gorunum" data-gorunum="otomasyon" hidden id="oto-kart">
+        <div class="bolum-bas">
+          <div><h1>Otomasyon</h1><p class="alt" id="oto-durum"></p></div>
+        </div>
+        <form id="oto-form" class="oto-izgara">
+          <fieldset class="kart">
+            <legend>Sniper</legend>
+            <p class="alt">Yeni lansman filtreye uyarsa otomatik alır.</p>
+            <label class="secim"><input type="checkbox" name="s.acik"> Açık</label>
+            <label class="secim"><input type="checkbox" name="s.simulasyon"> Simülasyon (gerçek işlem yok)</label>
+            <div class="alan-izgara">
+              <label>İşlem başı BNB <input name="s.bnb" inputmode="decimal"></label>
+              <label>Kayma % <input name="s.kayma" inputmode="decimal"></label>
+              <label>En az yaş (sn) <input name="s.minYasSn" inputmode="numeric" title="İlk 6 blokta anti-sniper ek ücreti var"></label>
+              <label>En fazla yaş (sn) <input name="s.maxYasSn" inputmode="numeric"></label>
+              <label>Günlük en fazla token <input name="s.gunlukMaxToken" inputmode="numeric"></label>
+              <label>Min holder <input name="s.minHolder" inputmode="numeric" placeholder="yok"></label>
+              <label>Maks top10 % <input name="s.maxTop10" inputmode="decimal" placeholder="yok"></label>
+            </div>
+            <label class="secim"><input type="checkbox" name="s.devSattiGizle"> Dev'in sattıklarını alma</label>
+          </fieldset>
+          <fieldset class="kart">
+            <legend>Otomatik satış</legend>
+            <p class="alt">Sadece sniper'ın aldığı pozisyonlar. Kademeler kalan miktarın yüzdesini satar.</p>
+            <label class="secim"><input type="checkbox" name="o.acik"> Açık</label>
+            <label class="secim"><input type="checkbox" name="o.simulasyon"> Simülasyon (gerçek işlem yok)</label>
+            <div class="alan-izgara">
+              <label class="genis">Kâr al kademeleri <input name="o.karAl" placeholder="2x:50, 4x:100"></label>
+              <label>Zarar kes % <input name="o.zararKes" inputmode="decimal" placeholder="kapalı"></label>
+              <label>Kontrol aralığı (sn) <input name="o.kontrolSn" inputmode="numeric"></label>
+              <label>En fazla izleme (saat) <input name="o.maxSureSaat" inputmode="decimal"></label>
+            </div>
+          </fieldset>
+        </form>
+        <div class="onay-cubuk" id="oto-onay" hidden>
+          <span>Otomasyon <b>gerçek işlem</b> yapacak: senin onayın olmadan BNB harcayabilir ya da token satabilir. Limitler ve güvenlik kontrolleri yine uygulanır.</span>
+          <button type="button" class="dugme tehlike" id="oto-onay-evet">Evet, gerçek işlemi aç</button>
+          <button type="button" class="dugme" id="oto-onay-hayir">Vazgeç</button>
+        </div>
+        <div class="satir-dugmeler"><button type="button" class="dugme ana" id="oto-kaydet">Ayarları kaydet</button><span id="oto-mesaj" class="soluk"></span></div>
+
+        <h2>Açık pozisyonlar</h2>
+        <div class="tablo-kap">
+          <table>
+            <thead><tr><th>Token</th><th>Tür</th><th>Giriş</th><th>Kalan</th><th>Gelen</th><th>Kâr al</th><th>Açılış</th></tr></thead>
+            <tbody id="oto-poz"></tbody>
+          </table>
+        </div>
+        <h2>Kayıtlar</h2>
+        <div id="oto-log" class="log"></div>
+      </section>
+
+      <!-- MİNTLER -->
+      <section class="gorunum" data-gorunum="mintler" hidden>
+        <div class="bolum-bas">
+          <div>
+            <h1>Mintler</h1>
+            <p class="alt">BSC'ye yeni yüklenen NFT kontratları · mintler cüzdan adresinle simüle edilir · <span id="mint-durum">…</span></p>
+          </div>
+        </div>
+        <form class="filtreler" id="mint-kontrol-form" autocomplete="off">
+          <input id="mint-kontrol-adres" class="mono" placeholder="Bir kontrat adresini elle kontrol et: 0x…" pattern="^0x[0-9a-fA-F]{40}$" required>
+          <label>BNB miktarı <input id="mint-kontrol-bnb" inputmode="decimal" placeholder="boş" title="Sadece kontrata düz BNB gönderilerek yapılan mintler için. Doldurursan calldata olmadan bu miktarla mint hazırlanır."></label>
+          <button type="submit" class="dugme" id="mint-kontrol-btn">Kontrol et</button>
+          <label class="secim"><input type="checkbox" id="mint-ses"> Yeni ücretsiz mintte ses</label>
+        </form>
+        <p class="not mint-ipucu">BNB miktarını sadece "kontrata şu kadar BNB gönder" diye duyurulan mintler için doldur. Boş bırakırsan kontrat incelenir.</p>
+        <!-- Mint onayı ekranın ortasında açılır: listenin neresindeysen sayfa kaymaz -->
+        <div class="modal" id="mint-modal" hidden role="dialog" aria-modal="true" aria-label="Mint onayı">
+          <div class="modal-kutu" id="mint-taslak"></div>
+        </div>
+        <div class="kart" id="mint-kontrol-sonuc" hidden></div>
+        <!-- Kasa kartı analizi: temettü kasası kartlarında mint, pazar ve temettü hesabı -->
+        <div class="modal" id="kasa-modal" hidden role="dialog" aria-modal="true" aria-label="Kasa kartı analizi">
+          <div class="modal-kutu kasa-kutu" id="kasa-icerik"></div>
+        </div>
+        <!-- Araştırma sonucu da ortada açılır: sürerken ilerleme, bitince karar ve nedenleri -->
+        <div class="modal" id="arastir-modal" hidden role="dialog" aria-modal="true" aria-label="Araştırma sonucu">
+          <div class="modal-kutu" id="arastir-icerik"></div>
+        </div>
+
+        <div class="sekme portfoy-sekme" role="radiogroup" aria-label="Mint türü" id="mint-tur">
+          <label><input type="radio" name="mint-tur" value="nft" checked><span>NFT <small id="mint-tur-nft"></small></span></label>
+          <label><input type="radio" name="mint-tur" value="token"><span>Token <small id="mint-tur-token"></small></span></label>
+        </div>
+        <div class="mint-filtre" id="mint-filtre" role="group" aria-label="Mintleri filtrele">
+          <button type="button" data-grup="hazir">Hazır <span></span></button>
+          <button type="button" data-grup="riskli">Riskli <span></span></button>
+          <button type="button" data-grup="gecmiyor">Geçmiyor <span></span></button>
+          <button type="button" data-grup="bitti">Kapandı / tükendi <span></span></button>
+          <button type="button" data-grup="izleniyor">İzleniyor <span></span></button>
+          <button type="button" data-grup="edildi">Mint ettiklerim <span></span></button>
+          <button type="button" data-grup="hepsi">Tümü <span></span></button>
+        </div>
+        <div class="mint-alt-filtre">
+          <input id="mint-ara" type="search" placeholder="Ad, sembol ya da adres ara" autocomplete="off">
+          <label class="secim"><input type="checkbox" id="mint-sadece-bedava"> Sadece 0 BNB</label>
+          <label class="secim"><input type="checkbox" id="mint-kimliksiz-gizle"> Sitesi ve sosyali doğrulanmamışları gizle</label>
+        </div>
+        <p class="not mint-filtre-not" id="mint-filtre-not"></p>
+        <div class="tablo-kap">
+          <table>
+            <thead><tr><th>Durum</th><th>Koleksiyon</th><th>Ücret</th><th>Basılan</th><th></th></tr></thead>
+            <tbody id="mintler"><tr><td colspan="5" class="soluk">Yükleniyor…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="daha-fazla"><button type="button" class="dugme" id="mint-daha" hidden></button></div>
+        <p class="not">Tarama sadece okuma yapar. İşlem sadece "Evet, mint et" onayınla ya da açtıysan otomatik mint kurallarıyla gönderilir. "Simülasyon geçti" demek güvenli demek değil: kaynağı doğrulanmamış ya da yetkisi sahibinde kalan kontratlarda dikkatli ol. Başka bir kontratın içinden yüklenen NFT'ler ve proxy kontratlar kaçabilir. Arka uçtan imza isteyen mintler simüle edilemez, sadece işaretlenir.</p>
+
+        <div class="kart ajan-kart" id="ajan-kart">
+          <div class="bolum-bas">
+            <div><h2 class="kart-baslik">Ajanlar</h2><p class="alt" id="ajan-durum">…</p></div>
+          </div>
+          <details class="katlanir" id="ajan-ayar-kat">
+            <summary>Ayarlar ve anahtarlar</summary>
+          <p class="alt">Site ajanı mint sitesini ve kodunu, sosyal ajan X hesabını ve taklit işaretlerini inceler. İkisi de sadece puan verir. Karar ve gönderim kural tabanlı koddadır: otomatik mint ücretsiz ve 0.001 BNB'ye kadar olan mintlerde, risk işareti yoksa ve Binance önizlemesi temizse (token izni, yetki değişikliği ya da beklenmeyen çıkış yoksa) yapılır. Daha pahalı mintler için bildirim gelir, sen onaylarsın. Otomatik mintlenenler Portföy'ün Agent bölümünde görünür.</p>
+          <form id="ajan-anahtar-form" class="filtreler" autocomplete="off">
+            <input type="password" id="ajan-anahtar" class="mono" placeholder="OpenRouter API anahtarı: sk-or-…" autocomplete="off" spellcheck="false">
+            <button type="submit" class="dugme ana">Anahtarı kaydet</button>
+            <button type="button" class="dugme" id="ajan-anahtar-sil" hidden>Anahtarı sil</button>
+            <span id="ajan-anahtar-durum" class="soluk"></span>
+          </form>
+          <form id="arama-anahtar-form" class="filtreler" autocomplete="off">
+            <input type="password" id="arama-anahtar" class="mono" placeholder="Brave Search API anahtarı (ücretsiz plan): ücretsiz web araması için" autocomplete="off" spellcheck="false">
+            <button type="submit" class="dugme ana">Anahtarı kaydet</button>
+            <button type="button" class="dugme" id="arama-anahtar-sil" hidden>Anahtarı sil</button>
+            <span id="arama-anahtar-durum" class="soluk"></span>
+          </form>
+          <p class="not">Brave anahtarı olunca sosyal ajanın web araması ücretsiz yapılır (Brave her ay 5 $ ücretsiz kredi veriyor: yaklaşık 1.000 arama; ödemeli bakiye yüklemezsen kota bitince ücret kesilmez, arama durur). Anahtar yoksa arama OpenRouter üzerinden ücretli yapılır ya da "Web arama sonucu" 0 ise hiç yapılmaz. Anahtarı api-dashboard.search.brave.com adresinden Search planıyla alabilirsin.</p>
+          <form id="ajan-form" class="alan-izgara" autocomplete="off">
+            <label class="secim genis"><input type="checkbox" name="otomatikMint"> Ücretsiz ve 0.001 BNB'ye kadar mintleri otomatik yap</label>
+            <label class="secim genis"><input type="checkbox" name="sadeceAgentId"> Sadece Agent ID mintlerini otomatik yap</label>
+            <label class="secim genis" title="Kapalıyken OpenRouter hiç kullanılmaz: karar ücretsiz süzgeçle (OKX işlem, token ve site taramaları, site kodu, taklit adı) ve Binance önizlemesiyle verilir"><input type="checkbox" name="llmArastirma"> LLM araştırması (OpenRouter, ücretli)</label>
+            <label>Günlük otomatik mint <input name="gunlukOtoMint" inputmode="numeric"></label>
+            <label>Web arama sonucu <input name="webSonuc" inputmode="numeric" title="Sosyal ajanın her araştırmada okuyacağı web sonucu sayısı. Model ücretsiz olsa da her sonuç OpenRouter'da yaklaşık 0,4 sent. 0 = web araması kapalı."></label>
+          </form>
+          <div class="onay-cubuk" id="ajan-onay" hidden>
+            <span>Otomatik mint açılınca sistem kurallar geçen <b>0.001 BNB'ye kadar</b> mintleri senin onayın olmadan gönderir (mint başına en fazla 0.001 BNB ve gas). Acil durdur bunu da kapatır.</span>
+            <button type="button" class="dugme tehlike" id="ajan-onay-evet">Evet, aç</button>
+            <button type="button" class="dugme" id="ajan-onay-hayir">Vazgeç</button>
+          </div>
+          <div class="satir-dugmeler"><button type="button" class="dugme ana" id="ajan-kaydet">Ayarları kaydet</button><span id="ajan-mesaj" class="soluk"></span></div>
+          </details>
+          <h3 class="ajan-rapor-baslik">Son kararlar</h3>
+          <div class="tablo-kap rapor-kap">
+            <table>
+              <thead><tr><th>Koleksiyon</th><th>Karar</th><th>Site</th><th>Sosyal</th><th>Neden</th></tr></thead>
+              <tbody id="ajan-raporlar"><tr><td colspan="5" class="soluk">Henüz araştırma yok</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- BASIM -->
+      <section class="gorunum" data-gorunum="liderler" hidden>
+        <div class="bolum-bas">
+          <div>
+            <h1>Liderler</h1>
+            <p class="alt">BSC'de en çok kazanan, en isabetli ve en zengin aktif cüzdanlar · kaynak OKX Onchain OS · <span id="lider-durum">…</span></p>
+          </div>
+        </div>
+        <div class="mint-filtre" id="lider-siralama" role="group" aria-label="Sıralama">
+          <button type="button" data-siralama="kazanc">En çok kazanan</button>
+          <button type="button" data-siralama="roi">En yüksek getiri</button>
+          <button type="button" data-siralama="isabet">En isabetli</button>
+          <button type="button" data-siralama="hacim">En çok hacim</button>
+          <button type="button" data-siralama="islem">En çok işlem</button>
+          <button type="button" data-siralama="servet">En zengin</button>
+        </div>
+        <div class="mint-alt-filtre lider-secim">
+          <label>Süre <select id="lider-sure"><option value="1g">1 gün</option><option value="3g">3 gün</option><option value="7g">7 gün</option><option value="30g">30 gün</option><option value="90g">3 ay</option></select></label>
+          <label>Cüzdan türü <select id="lider-tur"><option value="hepsi">Hepsi</option><option value="smartMoney">Akıllı para</option><option value="sniper">Sniper</option><option value="influencer">Fenomen (KOL)</option><option value="dev">Geliştirici</option><option value="fresh">Yeni cüzdan</option><option value="pump">Pump avcısı</option></select></label>
+          <input id="lider-ara" type="search" placeholder="Adres ya da token ara" autocomplete="off">
+        </div>
+        <p class="not mint-filtre-not" id="lider-not"></p>
+        <div class="kart" id="lider-detay" hidden></div>
+        <div class="tablo-kap">
+          <table>
+            <thead><tr><th>#</th><th>Cüzdan</th><th>Kazanç</th><th>Getiri</th><th>İsabet</th><th>İşlem</th><th>Hacim</th><th>BSC varlığı</th><th>En çok kazandıran</th><th>Son işlem</th></tr></thead>
+            <tbody id="liderler"><tr><td colspan="10" class="soluk">Yükleniyor…</td></tr></tbody>
+          </table>
+        </div>
+        <p class="not">Kazanç gerçekleşmiş kâr / zarardır (satılmış pozisyonlar). "En zengin" zincirin tamamı değil: seçilen süredeki kazanç ve hacim listelerinde yer alan aktif cüzdanların BSC'deki varlık değeridir. Liste sadece bilgi içindir; bu cüzdanları körü körüne takip etmek zarar ettirebilir, çoğu yüksek riskli meme tokenlerde işlem yapar.</p>
+      </section>
+
+      <section class="gorunum" data-gorunum="hound" hidden>
+        <div class="bolum-bas">
+          <div>
+            <h1>HOUND ve BlockHound</h1>
+            <p class="alt">Kendi token ve NFT koleksiyonumuz · arz, sahipler, madenciler ve gelir zincirden okunur · <span id="hound-durum">…</span></p>
+          </div>
+          <button type="button" class="dugme" id="hound-yenile">Yenile</button>
+        </div>
+        <div class="pnl-kartlar" id="hound-genel"></div>
+        <div class="hound-izgara">
+          <div class="kart hound-kart" id="hound-token"></div>
+          <div class="kart hound-kart" id="hound-nft"></div>
+        </div>
+        <p class="not">Sahipler kurulum bloğundan bu yana Transfer olaylarından hesaplanır; Agent ID adı olan cüzdanlar adıyla gösterilir. Kontratta biriken ücret, herkesin çağırabildiği withdraw() ile yalnızca kasaya gider. Arz sınırsızdır ama zorluk her dönemde bir bit artar.</p>
+      </section>
+
+      <section class="gorunum" data-gorunum="basim" hidden>
+        <div class="bolum-bas">
+          <div><h1>Basım</h1><p class="alt">Four.meme Agent ID şablonuyla token basımı · ayrı basıcı cüzdan · önce zincir simülasyonu</p></div>
+        </div>
+
+        <div class="kart" id="basim-cuzdan">Yükleniyor…</div>
+
+        <form class="kart" id="basim-form" hidden autocomplete="off">
+          <h2 class="kart-baslik">Token bilgileri</h2>
+          <div class="alan-izgara">
+            <label>Ad <input name="ad" maxlength="32" required></label>
+            <label>Sembol <input name="sembol" maxlength="10" required placeholder="ÖRN: AJAN"></label>
+            <label class="genis">Açıklama <textarea name="aciklama" maxlength="500" rows="3" required></textarea></label>
+            <label class="genis">Görsel (png, jpeg, webp, gif · en fazla 2 MB) <input type="file" name="gorsel" accept="image/png,image/jpeg,image/webp,image/gif" required></label>
+            <div class="genis gorsel-onizleme" id="basim-onizleme" hidden></div>
+            <label>Web sitesi <input name="webUrl" placeholder="https://"></label>
+            <label>X (Twitter) <input name="twitterUrl" placeholder="https://x.com/..."></label>
+            <label>Telegram <input name="telegramUrl" placeholder="https://t.me/..."></label>
+            <label>Ön alım (BNB) <input name="onalim" inputmode="decimal" value="0" id="basim-onalim"></label>
+          </div>
+          <details class="vergi">
+            <summary>Vergi ayarları (isteğe bağlı, varsayılan %0)</summary>
+            <p class="alt">Vergi DEX'e geçtikten sonraki alım-satımlara uygulanır. Vergi varsa dağılım oranlarının toplamı 100 olmalı.</p>
+            <div class="alan-izgara">
+              <label>Alım vergisi (bps, 100 = %1) <input name="buyFeeRate" inputmode="numeric" value="0"></label>
+              <label>Satış vergisi (bps) <input name="sellFeeRate" inputmode="numeric" value="0"></label>
+              <label>Kurucuya % <input name="rateFounder" inputmode="numeric" value="0"></label>
+              <label>Tutuculara % <input name="rateHolder" inputmode="numeric" value="0"></label>
+              <label>Yakım % <input name="rateBurn" inputmode="numeric" value="0"></label>
+              <label>Likiditeye % <input name="rateLiquidity" inputmode="numeric" value="0"></label>
+              <label>Ödül için en az token <input name="minShare" inputmode="numeric" value="10000"></label>
+            </div>
+          </details>
+          <div class="satir-dugmeler">
+            <button type="submit" class="dugme ana" id="basim-hazirla">Taslak hazırla ve simüle et</button>
+            <span id="basim-mesaj" class="soluk"></span>
+          </div>
+        </form>
+
+        <div class="kart" id="basim-taslak" hidden></div>
+
+        <p class="not">Four.meme girişi düz metin imza istediği için basım Binance cüzdanıyla değil, bu bilgisayarda şifreli duran ayrı bir cüzdanla yapılır. Anahtar <code>data/basici-cuzdan.json</code> dosyasında şifreli durur. Şifreyi kaybedersen bu cüzdana erişim de kaybolur. Basılan token curve aşamasında sadece Agent ID'li cüzdanlarla alınıp satılabilir.</p>
+      </section>
+
+      <!-- CÜZDAN -->
+      <section class="gorunum" data-gorunum="cuzdan" hidden>
+        <div class="bolum-bas"><div><h1>Cüzdan</h1><p class="alt">Binance Agentic Wallet · imzalar Binance tarafında atılır, private key bu bilgisayarda yok</p></div></div>
+        <div class="kart" id="cuzdan">Yükleniyor…</div>
+        <div class="kart" id="giris" hidden>
+          <p>Binance Agentic Wallet bağlı değil.</p>
+          <button type="button" class="dugme ana" data-baglan>QR ile bağlan</button>
+        </div>
+      </section>
+      <section class="gorunum" data-gorunum="ayarlar" hidden>
+        <div class="bolum-bas"><div><h1>Ayarlar</h1><p class="alt">Limitler, ajanlar ve bildirimler · değerler .env dosyasına yazılır · <span id="uyg-durum">…</span></p></div></div>
+        <form id="uyg-form" autocomplete="off">
+          <div class="oto-izgara">
+            <fieldset class="kart">
+              <legend>Limitler ve işlem</legend>
+              <p class="alt">Sunucunun zorunlu tavanları. Kaydedince hemen geçerli olur.</p>
+              <div class="alan-izgara" data-grup="limit"></div>
+            </fieldset>
+            <fieldset class="kart">
+              <legend>Ajanlar</legend>
+              <p class="alt">Araştırma ve otomatik mint sınırları. Kaydedince hemen geçerli olur.</p>
+              <div class="alan-izgara" data-grup="ajan">
+                <label title="Ajanların bir günde senin onayın olmadan gönderebileceği en fazla mint">Günlük otomatik mint <span class="soluk">(adet)</span><input name="gunlukOtoMint" inputmode="numeric"></label>
+              </div>
+            </fieldset>
+            <fieldset class="kart">
+              <legend>Sistem</legend>
+              <p class="alt">Bunlar yeniden başlatınca devreye girer.</p>
+              <div class="alan-izgara" data-grup="sistem"></div>
+            </fieldset>
+          </div>
+          <div class="onay-cubuk" id="uyg-onay" hidden>
+            <span id="uyg-onay-metin"></span>
+            <button type="button" class="dugme tehlike" id="uyg-onay-evet">Evet, kaydet</button>
+            <button type="button" class="dugme" id="uyg-onay-hayir">Vazgeç</button>
+          </div>
+          <div class="satir-dugmeler uyg-dugmeler">
+            <button type="submit" class="dugme ana">Kaydet</button>
+            <span id="uyg-mesaj" class="soluk"></span>
+          </div>
+          <div class="onay-cubuk" id="uyg-baslat" hidden>
+            <span>Bazı değişiklikler yeniden başlatınca devreye girecek. Terminal birkaç saniye kapanıp açılır, açık fiyat emirleri ve takip kaldığı yerden devam eder.</span>
+            <button type="button" class="dugme tehlike" id="uyg-baslat-evet">Yeniden başlat</button>
+          </div>
+        </form>
+
+        <h2 class="kart-baslik bildirim-gecmis-baslik">Bildirimler <span class="soluk" id="bildirim-durum"></span></h2>
+        <form id="bildirim-form" class="oto-izgara" autocomplete="off">
+          <fieldset class="kart">
+            <legend>Masaüstü bildirimleri</legend>
+            <p class="alt">Terminal açıkken macOS bildirim merkezine gelir.</p>
+            <label class="secim"><input type="checkbox" name="acik"> Bildirimler açık</label>
+            <label class="secim"><input type="checkbox" name="ses"> Bildirim sesi</label>
+            <label class="secim"><input type="checkbox" name="sadeceAgentId"> Sadece Agent ID mintleri</label>
+            <div class="alan-izgara">
+              <label>Saatte en fazla <input name="saatlikMax" inputmode="numeric" title="Bir saat içinde bundan fazlası gelirse kalanlar susturulur"></label>
+            </div>
+            <div class="satir-dugmeler"><button type="button" class="dugme" id="bildirim-dene">Deneme bildirimi gönder</button></div>
+          </fieldset>
+          <fieldset class="kart">
+            <legend>Ne zaman bildirilsin</legend>
+            <p class="alt">Kapattığın türler susturulur ama aşağıdaki geçmişte görünür.</p>
+            <div id="bildirim-kategoriler"></div>
+          </fieldset>
+          <fieldset class="kart">
+            <legend>Sessiz saatler</legend>
+            <p class="alt">Bu aralıkta hiç bildirim gelmez. Gece yarısını geçebilir (23:00 - 08:00 gibi).</p>
+            <label class="secim"><input type="checkbox" name="sessiz.acik"> Sessiz saatler açık</label>
+            <div class="alan-izgara">
+              <label>Başlangıç <input name="sessiz.bas" type="time"></label>
+              <label>Bitiş <input name="sessiz.bit" type="time"></label>
+            </div>
+          </fieldset>
+          <fieldset class="kart">
+            <legend>Tarayıcı sesleri</legend>
+            <p class="alt">Terminal sekmesi açıkken çalan kısa bip. Bu tarayıcıya özeldir.</p>
+            <label class="secim"><input type="checkbox" data-ses="f-ses"> Siper: yeni lansmanda ses</label>
+            <label class="secim"><input type="checkbox" data-ses="mint-ses"> Mintler: yeni ücretsiz mintte ses</label>
+          </fieldset>
+        </form>
+        <h2 class="kart-baslik bildirim-gecmis-baslik">Son bildirimler</h2>
+        <div class="tablo-kap">
+          <table>
+            <thead><tr><th>Zaman</th><th>Bildirim</th><th>Durum</th></tr></thead>
+            <tbody id="bildirim-gecmis"><tr><td colspan="3" class="soluk">Bu oturumda henüz bildirim yok</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- İŞLEM FİŞİ: her görünümde sağda sabit -->
+    <aside class="fis" id="fis">
+      <h2>İşlem</h2>
+      <div id="secili" class="secili soluk">Siper'den bir token seç ya da adres yapıştır.</div>
+      <form id="emir-form">
+        <div class="sekme" role="radiogroup">
+          <label><input type="radio" name="yon" value="al" checked><span>Al</span></label>
+          <label><input type="radio" name="yon" value="sat"><span>Sat</span></label>
+        </div>
+        <label>Token adresi
+          <input name="token" placeholder="0x…" required pattern="^0x[0-9a-fA-F]{40}$" autocomplete="off" class="mono">
+        </label>
+        <label><span id="miktar-etiket">Miktar (BNB)</span>
+          <input name="miktar" inputmode="decimal" placeholder="0.001" required>
+        </label>
+        <label>Kayma %
+          <input name="kayma" inputmode="decimal" placeholder="varsayılan">
+        </label>
+        <button type="button" class="dugme tam" id="teklif-btn">1 · Teklif al</button>
+        <div id="teklif" class="teklif"></div>
+        <button type="submit" class="dugme ana tam" id="emir-btn" disabled>2 · Simüle et</button>
+        <div class="onay-cubuk dikey" id="emir-onay" hidden>
+          <span id="emir-onay-metin"></span>
+          <button type="button" class="dugme tehlike tam" id="emir-onay-evet">Evet, gerçek emri gönder</button>
+          <button type="button" class="dugme tam" id="emir-onay-hayir">Vazgeç</button>
+        </div>
+        <div id="emir-sonuc" class="teklif"></div>
+      </form>
+      <p class="not">Kendi araştırmanı yap. Yeni çıkan tokenler sıfıra inebilir ya da satılamayabilir.</p>
+    </aside>
+  </div>
+
+  <script src="vendor/lightweight-charts.js"></script>
+  <script src="app.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+  "name": "blockhound",
+  "version": "0.1.0",
+  "description": "Local, open-source agent terminal for BNB Chain that sniffs out new mints from the first block",
+  "keywords": [
+    "bnb-chain",
+    "bsc",
+    "mint",
+    "nft",
+    "agent",
+    "binance-agentic-wallet",
+    "crypto"
+  ],
+  "homepage": "https://github.com/justbiar/blockhound#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/justbiar/blockhound.git"
+  },
+  "bugs": {
+    "url": "https://github.com/justbiar/blockhound/issues"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js",
+    "site:istatistik": "node scripts/site-istatistik.js",
+    "hound:madenci": "node scripts/hound-madenci.js"
+  },
+  "dependencies": {
+    "ethers": "6.16.0",
+    "qrcode": "1.5.4"
+  }
+}
