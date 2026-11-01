@@ -12,7 +12,10 @@ const EN = {
   k1: 'Install Node.js 20+ and the Binance Agentic Wallet CLI', k2: 'Clone the repository', k3: 'Install dependencies and create the settings file', k4: 'Start it and open 127.0.0.1:8787 in your browser',
   k_not: 'Default mode is simulation: nothing is sent. Keep limits low before going live. Details in the README.',
   k_cta: 'Setup guide', k_cta2: 'Report a bug or suggest',
-  n_baslik: 'How it works',
+  n_baslik: 'How the terminal works', ar_ust: 'Blockhound terminal', ar_baslik: 'The tool behind HOUND: it sniffs out new mints from the first block.',
+  s7_s: 'Who can mint?', s7_c: 'Only wallets holding a Binance Agent ID. Anyone can search for the hash, but the contract checks the sender against the Agent ID registry and rejects anyone without a record.',
+  s8_s: 'How much does it cost?', s8_c: 'HOUND costs 0.50 dollars per mint (10,000 HOUND) and a BlockHound 0.10 dollars, paid in BNB at the Chainlink price with any excess refunded. Network fees come on top.',
+  s9_s: 'Is supply capped?', s9_c: 'There is no hard cap, but difficulty doubles every epoch. Early on a mint takes seconds in a browser; a few epochs later it takes days even on a GPU, so difficulty sets the real supply.',
   n1_b: 'Sniff', n1_m: 'Catches every contract deployed in each new block, including those created inside factory contracts. Recognizes contracts behind proxies and mints gated by Agent ID.',
   n2_b: 'Simulate', n2_m: 'Tries the mint functions with your wallet address without sending a transaction. Free or paid, sold out or open, eligible or not: all read straight from the chain.',
   n3_b: 'Filter', n3_m: 'Transaction, token and site security scans, impersonated brand names and, as the last gate, a wallet preview: anything that asks for approvals, delivers nothing or is a trap gets dropped.',
@@ -41,13 +44,14 @@ const EN = {
 const el = (s) => document.querySelectorAll(s);
 // Sayfanın kendi metni Çincedir; İngilizce EN sözlüğünden gelir
 const ZH = {};
-for (const e of el('[data-i18n]')) ZH[e.dataset.i18n] = e.textContent;
+// Özgün Çince metin öğede saklanır: mint betikleri sonradan yüklenip bu sayfa İngilizceye çevrilmiş olsa da Çinceyi buradan alır
+for (const e of el('[data-i18n]')) { e.dataset.zh = e.textContent; ZH[e.dataset.i18n] = e.textContent; }
 const depo = { oku: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, yaz: (k, v) => { try { localStorage.setItem(k, v); } catch { /* yoksa önemli değil */ } } };
 let dil = depo.oku('dil') === 'en' ? 'en' : 'zh';
 
 function dilUygula(d) {
   dil = d === 'en' ? 'en' : 'zh';
-  document.documentElement.lang = dil;
+  document.documentElement.lang = dil === 'en' ? 'en' : 'zh-CN';
   for (const e of el('[data-i18n]')) e.textContent = (dil === 'en' ? EN : ZH)[e.dataset.i18n] ?? e.textContent;
   for (const b of el('[data-dil]')) b.setAttribute('aria-pressed', String(b.dataset.dil === dil));
   depo.yaz('dil', dil);
@@ -107,18 +111,18 @@ function turGoster(ad, odakla = false) {
   img.height = ad === 'hound' ? 1100 : ad === 'mintler' ? 1000 : 900;
   document.getElementById('tur-baslik').textContent = baslik;
   document.getElementById('tur-metin').textContent = metin;
-  for (const b of el('[data-tur]')) {
-    const secili = b.dataset.tur === ad;
+  for (const b of el('[data-tursekme]')) {
+    const secili = b.dataset.tursekme === ad;
     b.setAttribute('aria-selected', String(secili));
     b.tabIndex = secili ? 0 : -1;
     if (secili) { document.getElementById('tur-panel').setAttribute('aria-labelledby', b.id); if (odakla) b.focus(); }
   }
 }
-for (const b of el('[data-tur]')) {
-  b.addEventListener('click', () => turGoster(b.dataset.tur));
+for (const b of el('[data-tursekme]')) {
+  b.addEventListener('click', () => turGoster(b.dataset.tursekme));
   b.addEventListener('keydown', (e) => {
     const sira = Object.keys(TUR);
-    const i = sira.indexOf(b.dataset.tur);
+    const i = sira.indexOf(b.dataset.tursekme);
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
       e.preventDefault();
       turGoster(sira[(i + (e.key === 'ArrowRight' ? 1 : sira.length - 1)) % sira.length], true);

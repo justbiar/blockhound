@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Blockhound</title>
-  <meta name="description" content="Blockhound：从第一个区块嗅出 BSC 新 mint，过滤风险项目并自动 mint 免费项目的个人代理。">
+  <title>Blockhound · HOUND mint</title>
+  <meta name="description" content="HOUND 代币和 BlockHound NFT 通过工作量证明铸造：任何人都可以计算哈希，只有持有 Binance Agent ID 的钱包才能 mint。Blockhound 是从第一个区块嗅出 BSC 新 mint 的开源代理。">
   <meta name="theme-color" content="#111111">
-  <meta property="og:title" content="Blockhound">
-  <meta property="og:description" content="从第一个区块嗅出 BSC 新 mint 的代理。">
+  <meta property="og:title" content="Blockhound · HOUND mint">
+  <meta property="og:description" content="找到哈希，铸造猎犬。只有持有 Binance Agent ID 的钱包才能 mint。">
   <meta property="og:image" content="logo.svg">
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,12 +20,13 @@
   <header class="ust">
     <a class="marka" href="#" aria-label="Blockhound"><img src="logo.svg" alt="" width="32" height="32"><span>Blockhound</span></a>
     <nav class="menu" aria-label="栏目">
+      <a href="#mint" data-i18n="m_mint">Mint</a>
       <a href="#nasil" data-i18n="m_nasil">工作原理</a>
-      <a href="#tur" data-i18n="m_tur">终端</a>
-      <a href="#guvenlik" data-i18n="m_guvenlik">安全</a>
-      <a href="#rakamlar" data-i18n="m_rakamlar">数据</a>
-      <a href="#hound">HOUND</a>
-      <a href="#kur" data-i18n="m_kur">安装</a>
+      <a href="#zorluk" data-i18n="m_zorluk">难度</a>
+      <a href="#kayit" data-i18n="m_kayit">mint 记录</a>
+      <a href="#kontratlar" data-i18n="m_kontrat">合约</a>
+      <a href="#prompt" data-i18n="m_prompt">代理提示词</a>
+      <a href="#arac" data-i18n="m_arac">终端</a>
       <a href="#sss" data-i18n="m_sss">常见问题</a>
       <a href="https://github.com/justbiar/blockhound" class="gh" rel="noopener">GitHub</a>
     </nav>
@@ -36,44 +37,267 @@
   </header>
 
   <main id="ana">
-    <section class="kahraman">
-      <div class="kahraman-metin">
-        <p class="ust-yazi" data-i18n="h_ust">BNB Chain · 开源打新代理</p>
-        <h1 data-i18n="h_baslik">从第一个区块嗅出新 mint。</h1>
+    <!-- 1. Mint: sayfanın en başı -->
+    <section class="mint-kahraman">
+      <div class="mk-metin">
+        <p class="rozet-satir"><span class="canli-nokta" aria-hidden="true"></span><span data-i18n="u_rozet">工作量证明 mint · 仅限 Agent ID</span></p>
+        <h1 data-i18n="u_baslik">找到哈希，铸造猎犬。</h1>
+        <p class="alt" data-i18n="u_alt">HOUND 和 BlockHound 没有任何预挖。任何人都可以计算哈希，但只有持有 Binance Agent ID 的钱包才能 mint。供应量无上限，每个周期难度翻倍：一段时间后 mint 实际上将无法完成。</p>
+        <div class="cta">
+          <a class="dugme ana" href="#mint" data-i18n="u_cta1">开始 mint</a>
+          <a class="dugme" href="#nasil" data-i18n="u_cta2">工作原理</a>
+        </div>
+        <p class="zincir-satir" data-i18n="u_zincir">BNB Smart Chain · 凭 Agent ID 解锁 · 合约无所有者</p>
+      </div>
+      <form class="ajan-form ajan-kutu" id="ajan-form">
+        <p class="kutu-adim" data-i18n="a_adim">第 1 步 · 选择代理</p>
+        <label for="ajan" data-i18n="a_etiket">为哪个代理计算？Agent ID 名称或代理钱包地址</label>
+        <div class="ajan-satir">
+          <input id="ajan" name="ajan" type="text" autocomplete="off" spellcheck="false" placeholder="name.ai" required>
+          <button type="submit" class="dugme ana" data-i18n="a_bul">查找代理</button>
+        </div>
+        <p id="ajan-durum" class="kucuk-yazi" role="status" aria-live="polite"></p>
+        <div id="durum-yayin" class="bilgi-serit" role="status"></div>
+      </form>
+    </section>
+
+    <section id="mint" class="mint-alan" aria-label="Mint">
+      <p class="kutu-adim" data-i18n="a_adim2">第 2 步 · 计算哈希并用代理钱包发送</p>
+      <div class="mint-kartlar">
+        <article class="mint-kart" data-tur="hound">
+          <header>
+            <p class="ust-yazi">HOUND</p>
+            <h2 data-i18n="hk_baslik">10,000 HOUND</h2>
+            <p class="kucuk-yazi" data-i18n="hk_alt">ERC-20 · 每个解固定奖励 · 每 1,000 次 mint 难度 +1 位</p>
+          </header>
+          <dl class="olcu">
+            <div><dt data-i18n="o_ucret">费用</dt><dd data-alan="ucret">0.50 $</dd></div>
+            <div><dt data-i18n="o_zorluk">难度</dt><dd data-alan="zorluk">—</dd></div>
+            <div><dt data-i18n="o_basilan">已铸造</dt><dd data-alan="basilan">—</dd></div>
+            <div><dt data-i18n="o_kalan">距下次加难</dt><dd data-alan="kalan">—</dd></div>
+          </dl>
+          <div class="ilerleme" aria-hidden="true"><span data-alan="donem-cubuk"></span></div>
+          <div class="madenci">
+            <p class="kucuk-yazi" data-alan="tahmin"></p>
+            <div class="dugmeler">
+              <button type="button" class="dugme ana" data-is="kaz" data-i18n="d_kaz">开始计算</button>
+              <button type="button" class="dugme" data-is="dur" hidden data-i18n="d_dur">停止</button>
+            </div>
+            <p class="durum" data-alan="durum" role="status" aria-live="polite"></p>
+            <div class="komut" data-alan="komut" hidden>
+              <p class="kucuk-yazi" data-i18n="k_aciklama">在连接了代理钱包的电脑上依次运行这两条命令。第一条进行预览并返回 requestId，第二条用该 ID 发送。</p>
+              <pre class="kod"><code data-alan="komut-metni"></code></pre>
+              <button type="button" class="dugme" data-is="kopyala" data-i18n="d_kopyala">复制命令</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="mint-kart" data-tur="blockhound">
+          <header>
+            <p class="ust-yazi">BlockHound</p>
+            <h2 data-i18n="nk_baslik">1 个 BlockHound NFT</h2>
+            <p class="kucuk-yazi" data-i18n="nk_alt">ERC-721 · 图像完全上链，由你的哈希生成 · 每 250 次 mint 难度 +1 位</p>
+          </header>
+          <div class="nft-onizleme" data-alan="onizleme" role="img" aria-label="BlockHound 示例图像"></div>
+          <dl class="olcu">
+            <div><dt data-i18n="o_ucret">费用</dt><dd data-alan="ucret">0.10 $</dd></div>
+            <div><dt data-i18n="o_zorluk">难度</dt><dd data-alan="zorluk">—</dd></div>
+            <div><dt data-i18n="o_basilan">已铸造</dt><dd data-alan="basilan">—</dd></div>
+            <div><dt data-i18n="o_kalan">距下次加难</dt><dd data-alan="kalan">—</dd></div>
+          </dl>
+          <div class="ilerleme" aria-hidden="true"><span data-alan="donem-cubuk"></span></div>
+          <div class="madenci">
+            <p class="kucuk-yazi" data-alan="tahmin"></p>
+            <div class="dugmeler">
+              <button type="button" class="dugme ana" data-is="kaz" data-i18n="d_kaz">开始计算</button>
+              <button type="button" class="dugme" data-is="dur" hidden data-i18n="d_dur">停止</button>
+            </div>
+            <p class="durum" data-alan="durum" role="status" aria-live="polite"></p>
+            <div class="komut" data-alan="komut" hidden>
+              <p class="kucuk-yazi" data-i18n="k_aciklama">在连接了代理钱包的电脑上依次运行这两条命令。第一条进行预览并返回 requestId，第二条用该 ID 发送。</p>
+              <pre class="kod"><code data-alan="komut-metni"></code></pre>
+              <button type="button" class="dugme" data-is="kopyala" data-i18n="d_kopyala">复制命令</button>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="hiz-satir">
+        <label for="isci-sayi" data-i18n="i_etiket">CPU 核心数</label>
+        <input type="range" id="isci-sayi" min="1" max="16" value="4">
+        <output id="isci-deger" for="isci-sayi">4</output>
+        <span class="kucuk-yazi" id="hiz">—</span>
+      </div>
+    </section>
+
+    <!-- Bir bakışta: sabit kurallar -->
+    <dl class="serit" aria-label="HOUND">
+      <div><dd>0.50 $</dd><dt data-i18n="st1">每次 mint 获得 10,000 HOUND</dt></div>
+      <div><dd>0.10 $</dd><dt data-i18n="st2">每个 BlockHound NFT</dt></div>
+      <div><dd>0</dd><dt data-i18n="st3">预挖 · 团队份额 · 所有者</dt></div>
+      <div><dd>×2</dd><dt data-i18n="st4">每个周期难度翻倍</dt></div>
+      <div><dd>100%</dd><dt data-i18n="st5">费用进入项目金库</dt></div>
+    </dl>
+
+    <section id="nasil" class="bolum">
+      <p class="ust-yazi" data-i18n="na_ust">Mint 机制</p>
+      <h2 data-i18n="na_baslik">四步，规则对所有人都一样。</h2>
+      <ol class="adimlar">
+        <li><span class="adim-no">01 / ID</span><h3 data-i18n="na1_b">选择代理，计算哈希</h3><p data-i18n="na1_m">输入 Agent ID 名称，钱包地址会从链上注册表读取。你的浏览器用合约当前周期的谜题、该地址和一个随机数计算 keccak256 哈希。第一个前导零位足够多的哈希就是解。</p></li>
+        <li><span class="adim-no">02 / HASH</span><h3 data-i18n="na2_b">只属于你</h3><p data-i18n="na2_m">任何人都可以计算：你自己、你的显卡或朋友。但代理地址包含在哈希中，所以解只对该 Agent ID 钱包有效，无法从内存池复制抢跑。</p></li>
+        <li><span class="adim-no">03 / MINT</span><h3 data-i18n="na3_b">Mint</h3><p data-i18n="na3_m">找到解后页面会给出两条 baw 命令，用你的代理钱包发送（需在 Binance App 中开启开发者模式）。合约会通过 Agent ID 注册表检查发送方。费用以美元固定，多付部分会退还。</p></li>
+        <li><span class="adim-no">04 / ×2</span><h3 data-i18n="na4_b">每个周期翻倍</h3><p data-i18n="na4_m">HOUND 每 1,000 次、BlockHound 每 250 次 mint 难度增加 1 位。在算力不变的情况下，每个周期完成一次 mint 的时间翻倍。</p></li>
+      </ol>
+    </section>
+
+    <section id="zorluk" class="bolum">
+      <p class="ust-yazi" data-i18n="z_ust">难度曲线</p>
+      <h2 data-i18n="z_baslik">难度如何增长</h2>
+      <p class="alt" data-i18n="z_alt">每个周期难度增加 1 位，每次 mint 所需的平均哈希次数翻倍。图表显示随着 mint 数量增加，同样硬件完成一次 mint 需要多久。纵轴为对数刻度：每条线是下一条的倍数。</p>
+      <div class="grafik-ust">
+        <div class="sekme" role="group" aria-label="Koleksiyon">
+          <button type="button" data-grafik="hound" aria-pressed="true">HOUND</button>
+          <button type="button" data-grafik="blockhound" aria-pressed="false">BlockHound</button>
+        </div>
+        <ul class="lejant" aria-label="Seriler">
+          <li><span class="lejant-isaret" style="--renk: var(--seri-1)"></span><span data-i18n="z_seri1">浏览器（约 3 MH/s）</span></li>
+          <li><span class="lejant-isaret kesik" style="--renk: var(--seri-2)"></span><span data-i18n="z_seri2">显卡（约 1 GH/s）</span></li>
+        </ul>
+      </div>
+      <p class="zorluk-simdi" id="zorluk-simdi" role="status" aria-live="polite"></p>
+      <figure class="grafik">
+        <div id="zorluk-grafik" class="grafik-alan"></div>
+        <div id="grafik-ipucu" class="ipucu" role="status" hidden></div>
+        <figcaption class="kucuk-yazi" id="grafik-not"></figcaption>
+      </figure>
+      <details class="tablo-ac">
+        <summary data-i18n="z_tablo">以表格显示</summary>
+        <div class="tablo-kap"><table id="zorluk-tablo"></table></div>
+      </details>
+    </section>
+
+    <section id="kayit" class="bolum">
+      <p class="ust-yazi" data-i18n="ky_ust">链上数据</p>
+      <h2 data-i18n="ky_baslik">每一次 mint 都公开可查。</h2>
+      <p class="alt" data-i18n="ky_alt">以下数据直接从合约的 Mined 事件读取，不经过任何服务器。每一行都可以在 BscScan 上核对。</p>
+      <dl class="kayit-ozet" id="kayit-ozet">
+        <div><dt data-i18n="ky_toplam">总 mint 次数</dt><dd data-ky="toplam">—</dd></div>
+        <div><dt data-i18n="ky_madenci">矿工（Agent ID）</dt><dd data-ky="madenci">—</dd></div>
+        <div><dt data-i18n="ky_ucret">累计费用</dt><dd data-ky="ucret">—</dd></div>
+        <div><dt data-i18n="ky_blok">最新区块</dt><dd data-ky="blok">—</dd></div>
+      </dl>
+      <div class="kayit-ust">
+        <div class="sekme" role="group" aria-label="Kayıt">
+          <button type="button" data-kayit="son" aria-pressed="true" data-i18n="ky_son">最近 mint</button>
+          <button type="button" data-kayit="lider" aria-pressed="false" data-i18n="ky_lider">矿工排行</button>
+        </div>
+        <button type="button" class="dugme kucuk" id="kayit-yenile" data-i18n="ky_yenile">刷新数据</button>
+      </div>
+      <div class="tablo-kap kayit-tablo"><table id="kayit-tablo"></table></div>
+      <p class="kucuk-yazi" id="kayit-durum" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="kontratlar" class="bolum">
+      <p class="ust-yazi" data-i18n="kt_ust">合约与资金去向</p>
+      <h2 data-i18n="kt_baslik">合约</h2>
+      <p class="alt" data-i18n="kt_alt">两个合约都已部署在 BNB Smart Chain 上，源代码已在 BscScan 验证。合约没有所有者：以下参数在部署时固定，任何人都无法修改。</p>
+      <div class="fon">
+        <div class="fon-cubuk" aria-hidden="true"><span></span></div>
+        <dl class="ozellik">
+          <div><dt data-i18n="fo_kasa">项目金库</dt><dd><b>100%</b> <span data-i18n="fo_kasa_m">的 mint 费用。withdraw() 只能把资金转到这个固定地址，任何人都可以调用。</span></dd></div>
+          <div><dt data-i18n="fo_ekip">预挖与团队份额</dt><dd><b>0</b> <span data-i18n="fo_ekip_m">每一枚 HOUND 和每一个 BlockHound 都来自一次 mint，包括项目方自己的。</span></dd></div>
+          <div><dt data-i18n="fo_sahip">所有者权限</dt><dd><b>0</b> <span data-i18n="fo_sahip_m">没有 owner、没有暂停、没有升级：价格、奖励和难度规则永远不变。</span></dd></div>
+        </dl>
+      </div>
+      <div class="kontrat-kartlar">
+        <div class="kart">
+          <h3>HOUND <span class="rozet" data-i18n="kt_rozet">已验证</span></h3>
+          <p class="adres-satir"><code>0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac</code></p>
+          <div class="dugmeler">
+            <a class="dugme" href="https://bscscan.com/address/0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac#code" rel="noopener" data-i18n="kt_bscscan">在 BscScan 查看代码</a>
+            <button type="button" class="dugme" data-kopyala="0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac" data-i18n="kt_kopyala">复制地址</button>
+          </div>
+          <dl class="ozellik">
+            <div><dt data-i18n="kt_tur">类型</dt><dd>ERC-20 · HOUND · 18</dd></div>
+            <div><dt data-i18n="kt_odul">每次 mint</dt><dd>10,000 HOUND</dd></div>
+            <div><dt data-i18n="kt_ucret">费用</dt><dd>0.50 $</dd></div>
+            <div><dt data-i18n="kt_donem">加难</dt><dd data-i18n="kt_donem_h">每 1,000 次 mint +1 位</dd></div>
+          </dl>
+        </div>
+        <div class="kart">
+          <h3>BlockHound <span class="rozet" data-i18n="kt_rozet">已验证</span></h3>
+          <p class="adres-satir"><code>0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd</code></p>
+          <div class="dugmeler">
+            <a class="dugme" href="https://bscscan.com/address/0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd#code" rel="noopener" data-i18n="kt_bscscan">在 BscScan 查看代码</a>
+            <button type="button" class="dugme" data-kopyala="0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd" data-i18n="kt_kopyala">复制地址</button>
+          </div>
+          <dl class="ozellik">
+            <div><dt data-i18n="kt_tur">类型</dt><dd>ERC-721 · BHOUND</dd></div>
+            <div><dt data-i18n="kt_odul">每次 mint</dt><dd>1 NFT</dd></div>
+            <div><dt data-i18n="kt_ucret">费用</dt><dd>0.10 $</dd></div>
+            <div><dt data-i18n="kt_donem">加难</dt><dd data-i18n="kt_donem_n">每 250 次 mint +1 位</dd></div>
+          </dl>
+        </div>
+      </div>
+      <dl class="ozellik ortak">
+        <div><dt data-i18n="kt_basla">初始难度</dt><dd data-i18n="kt_basla_d">20 位（平均约 100 万次哈希）</dd></div>
+        <div><dt data-i18n="kt_kasa">费用接收金库</dt><dd><code>0x5b72c750D40F7EcB56A305087F0920DF2043c350</code></dd></div>
+        <div><dt data-i18n="kt_kayit">Agent ID 注册合约（Binance）</dt><dd><code>0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F</code></dd></div>
+        <div><dt data-i18n="kt_fiyat">价格来源（Chainlink BNB/USD）</dt><dd><code>0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE</code></dd></div>
+      </dl>
+      <p class="uyari" data-i18n="na_uyari">HOUND 和 BlockHound 不是投资产品。不承诺任何收益或价格；其价值可能为零。合约没有所有者，费用作为对 Blockhound 开发的支持进入项目金库。代码未经审计。</p>
+    </section>
+
+    <section id="prompt" class="bolum">
+      <p class="ust-yazi" data-i18n="p_ust">交给 AI 代理</p>
+      <h2 data-i18n="p_baslik">让你的代理来 mint</h2>
+      <p class="alt" data-i18n="p_alt">如果你有一个可以使用 Binance Agentic Wallet（baw）的 AI 代理，把下面的提示词交给它。它会计算哈希、检查预览，并在发送前征求你的确认。</p>
+      <div class="sekme" role="group" aria-label="Prompt">
+        <button type="button" data-prompt="hound" aria-pressed="true">HOUND</button>
+        <button type="button" data-prompt="blockhound" aria-pressed="false">BlockHound</button>
+      </div>
+      <pre class="kod prompt-kutu"><code id="prompt-metni"></code></pre>
+      <div class="dugmeler">
+        <button type="button" class="dugme ana" id="prompt-kopyala" data-i18n="p_kopyala">复制提示词</button>
+        <span class="kucuk-yazi" id="prompt-durum" role="status" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <section id="botlar" class="bolum">
+      <h2 data-i18n="b_baslik">机器人和自建矿工</h2>
+      <p class="alt" data-i18n="b_alt">如果你有带 Agent ID 的自动 mint 系统，也可以 mint HOUND：唯一条件是找到解。显卡、机器人或命令行，规则对所有人都一样。</p>
+      <pre class="kod"><code>challenge() view returns (bytes32)
+difficultyBits() view returns (uint256)
+mintFee() view returns (uint256)       // wei
+check(address miner, uint256 nonce) view returns (bytes32, bool)
+isAgent(address account) view returns (bool)
+mint(uint256 nonce) payable
+
+keccak256(abi.encodePacked(challenge(), msg.sender, nonce)) &lt;= type(uint256).max &gt;&gt; difficultyBits()</code></pre>
+      <p class="not" data-i18n="b_not">仓库中的命令行矿工会找到解并输出要发送的 baw 命令；它不会接触任何私钥：</p>
+      <pre class="kod"><code>node scripts/hound-madenci.js hound &lt;name&gt;.ai</code></pre>
+    </section>
+
+    <!-- 2. Terminal: projenin aracı -->
+    <section id="arac" class="bolum arac-giris">
+      <div>
+        <p class="ust-yazi" data-i18n="ar_ust">Blockhound 终端</p>
+        <h2 data-i18n="ar_baslik">HOUND 背后的工具：从第一个区块嗅出新 mint。</h2>
         <p class="alt" data-i18n="h_alt">Blockhound 扫描链上每一个新合约，用你的钱包地址模拟 mint 函数，过滤掉有风险的项目，并按你的规则自动 mint 免费项目。你持有的代币一开盘，第一分钟就会通知你。</p>
         <div class="cta">
           <a class="dugme ana" href="https://github.com/justbiar/blockhound" rel="noopener" data-i18n="h_cta1">GitHub 源代码</a>
           <a class="dugme" href="#kur" data-i18n="h_cta2">在自己电脑上运行</a>
         </div>
       </div>
-      <div class="kahraman-gorsel" aria-hidden="true">
-        <img src="logo.svg" alt="" width="280" height="280">
-      </div>
+      <img src="logo.svg" alt="" width="200" height="200" class="arac-logo">
     </section>
 
-    <section id="nasil" class="bolum">
-      <h2 data-i18n="n_baslik">工作原理</h2>
+    <section id="arac-nasil" class="bolum">
+      <h2 data-i18n="n_baslik">终端如何工作</h2>
       <ol class="adimlar">
-        <li>
-          <span class="adim-no">01</span>
-          <h3 data-i18n="n1_b">嗅探</h3>
-          <p data-i18n="n1_m">捕获每个新区块中部署的合约，包括工厂合约内部创建的合约。也能识别代理合约背后的实现和需要 Agent ID 的 mint。</p>
-        </li>
-        <li>
-          <span class="adim-no">02</span>
-          <h3 data-i18n="n2_b">模拟</h3>
-          <p data-i18n="n2_m">用你的钱包地址尝试 mint 函数，不发送真实交易。是否免费、费用多少、是否已售罄、你是否有资格：全部直接从链上读取。</p>
-        </li>
-        <li>
-          <span class="adim-no">03</span>
-          <h3 data-i18n="n3_b">过滤</h3>
-          <p data-i18n="n3_m">交易、代币和网站安全扫描，冒充品牌名称检测，最后一道关是钱包预览：要求授权、不带来资产或是陷阱的项目都会被过滤。</p>
-        </li>
-        <li>
-          <span class="adim-no">04</span>
-          <h3 data-i18n="n4_b">mint 并通知</h3>
-          <p data-i18n="n4_m">通过你规则的免费 mint 会在每日上限内自动发送，较贵的会先问你。你持有的代币一建池就会收到通知。</p>
-        </li>
+        <li><span class="adim-no">01</span><h3 data-i18n="n1_b">嗅探</h3><p data-i18n="n1_m">捕获每个新区块中部署的合约，包括工厂合约内部创建的合约。也能识别代理合约背后的实现和需要 Agent ID 的 mint。</p></li>
+        <li><span class="adim-no">02</span><h3 data-i18n="n2_b">模拟</h3><p data-i18n="n2_m">用你的钱包地址尝试 mint 函数，不发送真实交易。是否免费、费用多少、是否已售罄、你是否有资格：全部直接从链上读取。</p></li>
+        <li><span class="adim-no">03</span><h3 data-i18n="n3_b">过滤</h3><p data-i18n="n3_m">交易、代币和网站安全扫描，冒充品牌名称检测，最后一道关是钱包预览：要求授权、不带来资产或是陷阱的项目都会被过滤。</p></li>
+        <li><span class="adim-no">04</span><h3 data-i18n="n4_b">mint 并通知</h3><p data-i18n="n4_m">通过你规则的免费 mint 会在每日上限内自动发送，较贵的会先问你。你持有的代币一建池就会收到通知。</p></li>
       </ol>
     </section>
 
@@ -82,11 +306,11 @@
       <h2 data-i18n="tu_baslik">内部一览</h2>
       <p class="alt" data-i18n="tu_alt">截图来自真实终端和实时链上数据。终端支持英文和土耳其文界面。钱包余额和地址已模糊处理，不显示个人持仓。</p>
       <div class="tur-sekme" role="tablist" aria-label="终端栏目">
-        <button type="button" role="tab" id="tur-mintler" aria-controls="tur-panel" aria-selected="true" data-tur="mintler" data-i18n="tu_mintler">Mint</button>
-        <button type="button" role="tab" id="tur-hound" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tur="hound">HOUND</button>
-        <button type="button" role="tab" id="tur-siper" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tur="siper" data-i18n="tu_siper">新发射</button>
-        <button type="button" role="tab" id="tur-liderler" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tur="liderler" data-i18n="tu_liderler">排行榜</button>
-        <button type="button" role="tab" id="tur-ayarlar" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tur="ayarlar" data-i18n="tu_ayarlar">设置</button>
+        <button type="button" role="tab" id="tur-mintler" aria-controls="tur-panel" aria-selected="true" data-tursekme="mintler" data-i18n="tu_mintler">Mint</button>
+        <button type="button" role="tab" id="tur-hound" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tursekme="hound">HOUND</button>
+        <button type="button" role="tab" id="tur-siper" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tursekme="siper" data-i18n="tu_siper">新发射</button>
+        <button type="button" role="tab" id="tur-liderler" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tursekme="liderler" data-i18n="tu_liderler">排行榜</button>
+        <button type="button" role="tab" id="tur-ayarlar" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tursekme="ayarlar" data-i18n="tu_ayarlar">设置</button>
       </div>
       <figure class="tur-panel" id="tur-panel" role="tabpanel" aria-labelledby="tur-mintler">
         <div class="tur-cerceve"><img id="tur-gorsel" src="img/en/mintler.jpg" width="1440" height="1000" alt="Blockhound Mint 界面：新 mint 合约、状态标签和 Mint 按钮"></div>
@@ -132,30 +356,15 @@
       <div class="cta"><a class="dugme ana" href="https://github.com/justbiar/blockhound#readme" rel="noopener" data-i18n="k_cta">安装指南</a><a class="dugme" href="https://github.com/justbiar/blockhound/issues" rel="noopener" data-i18n="k_cta2">反馈问题或建议</a></div>
     </section>
 
-    <section id="hound" class="bolum hound">
-      <div>
-        <p class="ust-yazi" data-i18n="t_ust">工作量证明 mint</p>
-        <h2 data-i18n="t_baslik">HOUND 与 BlockHound</h2>
-        <p data-i18n="t_m1">HOUND 是社区代币，BlockHound 是 NFT 系列。没有任何预挖：任何人都可以计算哈希，但只有持有 Binance Agent ID 的钱包才能 mint。供应量无上限，但每个周期难度翻倍，一段时间后 mint 实际上将无法完成。10,000 HOUND 售价 0.50 美元，一个 BlockHound 售价 0.10 美元；费用进入项目金库以支持开发。</p>
-        <p class="uyari" data-i18n="t_uyari">HOUND 不是投资产品。不承诺任何收益、分红或价格；其价值可能为零。请只用你能承受损失的金额支持。</p>
-        <dl class="ozellik">
-          <div><dt>HOUND</dt><dd><a href="https://bscscan.com/address/0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac#code" rel="noopener"><code>0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac</code></a></dd></div>
-          <div><dt>BlockHound</dt><dd><a href="https://bscscan.com/address/0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd#code" rel="noopener"><code>0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd</code></a></dd></div>
-        </dl>
-        <div class="cta">
-          <a class="dugme ana" href="mint.html" data-i18n="t_cta">Mint 页面</a>
-          <a class="dugme" href="mint.html#zorluk" data-i18n="t_cta2">难度图表</a>
-          <a class="dugme" href="mint.html#prompt" data-i18n="t_cta3">代理提示词</a>
-        </div>
-      </div>
-    </section>
-
     <section id="sss" class="bolum">
       <h2 data-i18n="s_baslik">常见问题</h2>
+      <details><summary data-i18n="s7_s">谁可以 mint？</summary><p data-i18n="s7_c">只有持有 Binance Agent ID 的钱包。任何人都可以计算哈希，但合约会检查发送方在 Agent ID 注册表中是否有记录，没有的会被拒绝。</p></details>
+      <details><summary data-i18n="s8_s">要花多少钱？</summary><p data-i18n="s8_c">HOUND 每次 0.50 美元（10,000 HOUND），BlockHound 每个 0.10 美元，按 Chainlink 价格以 BNB 支付，多付部分自动退还。另加网络手续费。</p></details>
+      <details><summary data-i18n="s9_s">供应量有上限吗？</summary><p data-i18n="s9_c">没有硬性上限，但每个周期难度翻倍。早期在浏览器里几秒就能完成，几个周期后即使用显卡也要几天：实际供应由难度决定。</p></details>
       <details><summary data-i18n="s1_s">Blockhound 会访问我的钱包吗？</summary><p data-i18n="s1_c">介绍页面不连接任何钱包。Mint 页面也不连接钱包：它在你的浏览器里计算哈希，由你用自己的代理钱包通过 baw 发送。Blockhound 应用运行在安装它的电脑上，使用电脑主人自己的钱包会话和其设置的限额。</p></details>
+      <details><summary data-i18n="s4_s">HOUND 是投资吗？</summary><p data-i18n="s4_c">不是。HOUND 和 BlockHound 用于支持项目；不承诺任何收益或价格，其价值可能为零。</p></details>
       <details><summary data-i18n="s2_s">支持哪条链？</summary><p data-i18n="s2_c">BNB Chain（BSC）。既能识别 NFT mint，也能识别通过 mint 合约分发的代币 mint。</p></details>
       <details><summary data-i18n="s3_s">mint 到的东西都值钱吗？</summary><p data-i18n="s3_c">不是。大多数免费 mint 价值为零。代币 mint 的流动性池通常在 mint 结束后才建立，有些永远不会建立。Blockhound 让你更容易抓住机会，但不保证盈利。</p></details>
-      <details><summary data-i18n="s4_s">HOUND 是投资吗？</summary><p data-i18n="s4_c">不是。HOUND 和 BlockHound 用于支持项目；不承诺任何收益或价格，其价值可能为零。</p></details>
       <details><summary data-i18n="s5_s">我可以自己部署吗？</summary><p data-i18n="s5_c">可以。Blockhound 是 MIT 许可的开源项目：从 GitHub 下载后，用你自己的钱包在自己电脑上运行，可以阅读和改进代码。</p></details>
       <details><summary data-i18n="s6_s">我可以贡献代码吗？</summary><p data-i18n="s6_c">当然。先在 GitHub 上开一个 issue；安全漏洞请私下报告，不要公开发 issue。</p></details>
     </section>
@@ -167,5 +376,8 @@
     <a class="gh-alt" href="https://github.com/justbiar/blockhound" rel="noopener">GitHub</a>
   </footer>
   <script src="site.js"></script>
+  <script type="module" src="hound/mint.js"></script>
+  <script type="module" src="hound/sayfa.js"></script>
+  <script type="module" src="hound/kayit.js"></script>
 </body>
 </html>

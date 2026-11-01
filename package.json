@@ -29,7 +29,8 @@
     "start": "node src/server.js",
     "test": "node --test test/*.test.js",
     "site:istatistik": "node scripts/site-istatistik.js",
-    "hound:madenci": "node scripts/hound-madenci.js"
+    "hound:madenci": "node scripts/hound-madenci.js",
+    "hound:anlik": "node scripts/hound-kayit-anlik.js"
   },
   "dependencies": {
     "ethers": "6.16.0",

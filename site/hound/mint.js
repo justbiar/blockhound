@@ -6,6 +6,20 @@ import { hashle, keccakMetin } from './madenci.js';
 import { nftSvg } from './gorsel.js';
 
 const EN = {
+  m_mint: 'Mint', m_kayit: 'Mint log', m_arac: 'Terminal',
+  u_rozet: 'Proof-of-work mint · Agent ID only', u_cta1: 'Start minting', u_cta2: 'How it works',
+  u_zincir: 'BNB Smart Chain · Unlocked by Agent ID · Contracts have no owner',
+  a_adim: 'Step 1 · Pick the agent', a_adim2: 'Step 2 · Find the hash and send it from the agent wallet',
+  st1: '10,000 HOUND per mint', st2: 'per BlockHound NFT', st3: 'Pre-mint · team share · owner', st4: 'Difficulty every epoch', st5: 'Of fees to the project treasury',
+  z_ust: 'Difficulty curve', p_ust: 'Hand it to an AI agent',
+  ky_ust: 'On-chain data', ky_baslik: 'Every mint, in the open.',
+  ky_alt: 'Read straight from the contracts\' Mined events, with no server in between. Every row can be checked on BscScan.',
+  ky_toplam: 'Total mints', ky_madenci: 'Miners (Agent ID)', ky_ucret: 'Fees paid', ky_blok: 'Latest block',
+  ky_son: 'Recent mints', ky_lider: 'Top miners', ky_yenile: 'Refresh data',
+  kt_ust: 'Contracts and where the fees go',
+  fo_kasa: 'Project treasury', fo_kasa_m: 'of mint fees. withdraw() can only move funds to this fixed address, and anyone can call it.',
+  fo_ekip: 'Pre-mint and team share', fo_ekip_m: 'Every HOUND and every BlockHound comes from a mint, the project\'s own included.',
+  fo_sahip: 'Owner powers', fo_sahip_m: 'No owner, no pause, no upgrade: price, reward and difficulty rules never change.',
   atla: 'Skip to content', m_ana: 'Home', m_nasil: 'How it works', m_bot: 'For bots', m_kod: 'Contract code',
   m_zorluk: 'Difficulty', m_prompt: 'Agent prompt', m_kontrat: 'Contracts',
   z_baslik: 'How difficulty rises',
@@ -23,13 +37,13 @@ const EN = {
   u_ust: 'Proof-of-work mint', u_baslik: 'Find the hash, mint the hound.',
   u_alt: 'Nobody pre-minted HOUND or BlockHound. Anyone can search for the hash, but only wallets with a Binance Agent ID can mint. Supply is unlimited and difficulty doubles every epoch: after a while minting becomes practically impossible.',
   a_etiket: 'Which agent are we searching for? Agent ID name or agent wallet address', a_bul: 'Find agent',
-  h_baslik: '10,000 HOUND', h_alt: 'ERC-20 · fixed reward per solution · one bit harder every 1,000 mints',
-  n_baslik: '1 BlockHound NFT', n_alt: 'ERC-721 · on-chain art derived from your hash · one bit harder every 250 mints',
+  hk_baslik: '10,000 HOUND', hk_alt: 'ERC-20 · fixed reward per solution · one bit harder every 1,000 mints',
+  nk_baslik: '1 BlockHound NFT', nk_alt: 'ERC-721 · on-chain art derived from your hash · one bit harder every 250 mints',
   o_ucret: 'Fee', o_zorluk: 'Difficulty', o_basilan: 'Minted', o_kalan: 'Until harder',
   d_kaz: 'Find hash', d_dur: 'Stop', d_kopyala: 'Copy commands',
   k_aciklama: 'Run these two commands in order on the computer where the agent wallet is connected. The first previews and returns a requestId, the second sends with that id.',
   i_etiket: 'CPU cores',
-  na_baslik: 'How it works',
+  na_ust: 'Mint mechanics', na_baslik: 'Four steps, the same rules for everyone.',
   na1_b: 'Pick the agent, find a hash', na1_m: 'You type the Agent ID name and the wallet address is read from the on-chain registry. Your browser hashes the contract\'s puzzle for the epoch, that address and a random number with keccak256. The first hash with enough leading zero bits is a solution.',
   na2_b: 'Yours only', na2_m: 'Anyone can search: you, your GPU or a friend. But the agent\'s address is part of the hash, so the solution only works for that Agent ID wallet and cannot be copied from the mempool.',
   na3_b: 'Mint', na3_m: 'Once a solution is found the page gives you two baw commands to send it from your agent wallet (Developer Mode must be on in the Binance app). The contract checks the sender against the Agent ID registry. The fee is fixed in dollars and any excess is refunded.',
@@ -47,7 +61,7 @@ const M = {
     ajanBulundu: (ad, a) => `${ad} → ${a}。已找到 Agent ID，将为该地址计算。`,
     ajanAdres: (a) => `将为 ${a} 计算。已找到 Agent ID。`,
     ajanYok: '没有找到以此名称注册的 Agent ID。', ajanKayitsiz: '该地址没有 Agent ID：即使找到哈希，mint 也会被拒绝。',
-    ajanGecersiz: '请输入 Agent ID 名称（例如 biar.ai）或以 0x 开头的地址。', ajanBekle: '正在读取注册表…',
+    ajanGecersiz: '请输入 Agent ID 名称（例如 name.ai）或以 0x 开头的地址。', ajanBekle: '正在读取注册表…',
     ajanOnce: '请先在上方选择一个代理。',
     tahmin: (d, s) => `平均需要 ${d} 次尝试 · 按当前速度约 ${s}`, tahminHizsiz: (d) => `平均需要 ${d} 次尝试`,
     araniyor: (d) => `计算中… ${d} 次尝试`, bulundu: (d, s) => `找到解：约 ${d} 次尝试，用时 ${s}。请用下方命令从代理钱包发送。`,
@@ -63,7 +77,7 @@ const M = {
     ajanBulundu: (ad, a) => `${ad} → ${a}. Agent ID found, searching for this address.`,
     ajanAdres: (a) => `Searching for ${a}. Agent ID found.`,
     ajanYok: 'No Agent ID is registered under this name.', ajanKayitsiz: 'This address has no Agent ID: a mint would be rejected even with a valid hash.',
-    ajanGecersiz: 'Type an Agent ID name (such as biar.ai) or an address starting with 0x.', ajanBekle: 'Reading the registry…',
+    ajanGecersiz: 'Type an Agent ID name (such as name.ai) or an address starting with 0x.', ajanBekle: 'Reading the registry…',
     ajanOnce: 'Pick an agent above first.',
     tahmin: (d, s) => `About ${d} tries on average · roughly ${s} at this speed`, tahminHizsiz: (d) => `About ${d} tries on average`,
     araniyor: (d) => `Searching… ${d} tries`, bulundu: (d, s) => `Solution found in about ${d} tries, ${s}. Send it from the agent wallet with the commands below.`,
@@ -80,7 +94,7 @@ const $$ = (s, k = document) => [...k.querySelectorAll(s)];
 const depo = { oku: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, yaz: (k, v) => { try { localStorage.setItem(k, v); } catch { /* önemli değil */ } } };
 // Sayfanın kendi metni Çincedir; İngilizce EN sözlüğünden gelir
 const ZH = {};
-for (const e of $$('[data-i18n]')) ZH[e.dataset.i18n] = e.textContent;
+for (const e of $$('[data-i18n]')) ZH[e.dataset.i18n] = e.dataset.zh ?? e.textContent;
 let dil = depo.oku('dil') === 'en' ? 'en' : 'zh';
 const t = () => M[dil];
 const sayi = (v) => Number(v).toLocaleString(dil === 'en' ? 'en-US' : 'zh-CN');
@@ -263,7 +277,6 @@ $('#ajan-form').addEventListener('submit', async (e) => {
     ajan = r;
     const kisa = `${r.adres.slice(0, 6)}…${r.adres.slice(-4)}`;
     durum.textContent = r.ad ? t().ajanBulundu(r.ad, kisa) : t().ajanAdres(kisa);
-    depo.yaz('ajan', $('#ajan').value.trim());
   } catch (err) {
     ajan = null;
     durum.textContent = err.message === 'gecersiz' ? t().ajanGecersiz : t().hata(err.message);
@@ -286,8 +299,8 @@ $('#isci-sayi').value = String(cekirdek);
 $('#isci-deger').textContent = String(cekirdek);
 $('#isci-sayi').addEventListener('input', (e) => { $('#isci-deger').textContent = e.target.value; });
 
-const kayitliAjan = depo.oku('ajan');
-if (kayitliAjan) $('#ajan').value = kayitliAjan;
+// Arama kutusu her ziyarette boş açılır; eski sürümlerin sakladığı ad silinir
+try { localStorage.removeItem('ajan'); } catch { /* önemli değil */ }
 KART.blockhound.alan('onizleme').innerHTML = nftSvg(rastgeleSeed(), '#?');
 dilUygula(dil);
 for (const k of Object.values(KART)) guncelle(k);
