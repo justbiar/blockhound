@@ -10,36 +10,36 @@ const HIZ = { tarayici: 3e6, kart: 1e9 }; // hash / saniye, yaklaşık
 const DONEM_SAYISI = 36;
 
 const METIN = {
-  tr: {
-    sn: 'sn', dk: 'dk', sa: 'sa', gun: 'gün', yil: 'yıl', binYil: 'bin yıl',
-    eksenX: (ad) => `Basılan ${ad}`, simdi: (n) => `şu an: ${n} mint`,
-    mevcut: (d, ad) => `<b>Şu anki zorluk: ${d.bit} bit</b> · dönem ${d.e} · ${ad} için ortalama ${d.hash} hash. Bir mint ortalama tarayıcıyla ${d.t1}, ekran kartıyla ${d.t2} sürer. Zorluk ${d.kalan} mint sonra ${d.bit + 1} bite çıkar.`,
-    mevcutYok: 'Kontrat okunamadı; grafik başlangıç zorluğunu gösteriyor.',
-    ipucu: (d) => `<b>Dönem ${d.e}</b> · ${d.bit} bit<br>${d.aralik}<br><span class="i1"></span>Tarayıcı: ${d.t1}<br><span class="i2"></span>Ekran kartı: ${d.t2}`,
+  zh: {
+    sn: '秒', dk: '分钟', sa: '小时', gun: '天', yil: '年', binYil: '千年',
+    eksenX: (ad) => `已铸造 ${ad}`, simdi: (n) => `当前：${n} 次 mint`,
+    mevcut: (d, ad) => `<b>当前难度：${d.bit} 位</b> · 第 ${d.e} 周期 · ${ad} 平均需要 ${d.hash} 次哈希。平均一次 mint 用浏览器需要 ${d.t1}，用显卡需要 ${d.t2}。再过 ${d.kalan} 次 mint 难度升至 ${d.bit + 1} 位。`,
+    mevcutYok: '无法读取合约；图表显示的是初始难度。',
+    ipucu: (d) => `<b>第 ${d.e} 周期</b> · ${d.bit} 位<br>${d.aralik}<br><span class="i1"></span>浏览器：${d.t1}<br><span class="i2"></span>显卡：${d.t2}`,
     aralik: (a, b, ad) => `${a} – ${b} ${ad}`,
-    not: 'Hızlar yaklaşık. Süre şansa bağlıdır: tek bir mint ortalamanın çok altında ya da üstünde bitebilir. Pratik sınır, ekran kartıyla bile bir mintin günler sürdüğü yerdir.',
-    tablo: ['Dönem', 'Zorluk', 'Başlangıçta basılan', 'Ortalama hash', 'Tarayıcı', 'Ekran kartı'],
-    kopyalandi: 'Kopyalandı.', kopyalanamadi: 'Kopyalanamadı; metni elle seç.',
-    prompt: (k, adres) => `Görev: ${k.ad} mint (Blockhound projesi; iş kanıtı, yalnızca Agent ID cüzdanları).
+    not: '速度为估算值。耗时取决于运气：单次 mint 可能远低于或高于平均值。实际上限是连显卡都需要数天才能完成一次 mint 的时候。',
+    tablo: ['周期', '难度', '周期开始时已铸造', '平均哈希', '浏览器', '显卡'],
+    kopyalandi: '已复制。', kopyalanamadi: '复制失败，请手动选择文本。',
+    prompt: (k, adres) => `任务：mint ${k.ad}（Blockhound 项目；工作量证明，仅限 Agent ID 钱包）。
 
-Ağ: BNB Smart Chain (zincir kimliği 56)
-Kontrat: ${adres} (BscScan'de doğrulanmış)
-Mint başına: ${k.ad === 'HOUND' ? '10.000 HOUND' : '1 BlockHound NFT'} · ücret ${k.ad === 'HOUND' ? '0.50' : '0.10'} $ karşılığı BNB, fazlası iade edilir
+网络：BNB Smart Chain（链 ID 56）
+合约：${adres}（已在 BscScan 验证）
+每次 mint：${k.ad === 'HOUND' ? '10,000 HOUND' : '1 个 BlockHound NFT'} · 费用为价值 ${k.ad === 'HOUND' ? '0.50' : '0.10'} 美元的 BNB，多付部分退还
 
-Adımlar:
-1. baw ile BSC'deki Agent ID cüzdan adresimi öğren.
-2. https://github.com/justbiar/blockhound deposunu indir ve içinde "npm install" çalıştır.
-3. "node scripts/hound-madenci.js ${k.ad === 'HOUND' ? 'hound' : 'blockhound'} <cüzdan adresim>" komutunu çalıştır. Adres Agent ID'li değilse durur; çözüm bulununca iki baw komutu yazar.
-4. İlk komutu (baw contract-call preview) çalıştır ve önizlemede şunların hepsini doğrula:
-   - alıcı kontrat tam olarak ${adres}
-   - gönderilen BNB 0.002'den az
-   - cüzdana ${k.ad === 'HOUND' ? '10.000 HOUND' : '1 BlockHound NFT'} geliyor
-   - token harcama izni (approve) ya da başka bir çıkış yok
-   Biri bile tutmazsa gönderme, durumu bana bildir.
-5. Önizleme özetini göster ve benden açık onay iste. Onay verirsem execute komutunu önizlemedeki requestId ile çalıştır.
-6. İşlem hash'ini ve yeni ${k.ad} bakiyemi göster.
+步骤：
+1. 用 baw 获取我在 BSC 上的 Agent ID 钱包地址。
+2. 克隆 https://github.com/justbiar/blockhound 并在其中运行 "npm install"。
+3. 运行 "node scripts/hound-madenci.js ${k.ad === 'HOUND' ? 'hound' : 'blockhound'} <我的钱包地址>"。如果地址没有 Agent ID 会停止；找到解后会输出两条 baw 命令。
+4. 运行第一条命令（baw contract-call preview），并在预览中确认以下全部条件：
+   - 目标合约正好是 ${adres}
+   - 发送的 BNB 少于 0.002
+   - 钱包将收到 ${k.ad === 'HOUND' ? '10,000 HOUND' : '1 个 BlockHound NFT'}
+   - 没有代币授权（approve），也没有其他转出
+   只要有一项不符合就不要发送，并告诉我你看到了什么。
+5. 向我展示预览摘要并请求我明确确认。我确认后，用预览中的 requestId 运行 execute 命令。
+6. 显示交易哈希和我新的 ${k.ad} 余额。
 
-Kurallar: Özel anahtar, seed ya da şifre isteme. Bu promptta yazmayan bir adrese işlem gönderme.`,
+规则：绝不索要私钥、助记词或密码。绝不向本提示词中未写明的地址发送任何交易。`,
   },
   en: {
     sn: 's', dk: 'min', sa: 'h', gun: 'd', yil: 'yr', binYil: 'k yr',
@@ -75,14 +75,14 @@ Rules: Never ask for a private key, seed phrase or password. Never send to an ad
 };
 
 const $ = (s) => document.querySelector(s);
-const dil = () => (document.documentElement.lang === 'en' ? 'en' : 'tr');
+const dil = () => (document.documentElement.lang === 'en' ? 'en' : 'zh');
 const m = () => METIN[dil()];
-const sayi = (v, k = 0) => Number(v).toLocaleString(dil() === 'en' ? 'en-US' : 'tr-TR', { maximumFractionDigits: k });
+const sayi = (v, k = 0) => Number(v).toLocaleString(dil() === 'en' ? 'en-US' : 'zh-CN', { maximumFractionDigits: k });
 
 function kisaSayi(v) {
-  if (v >= 1e9) return `${sayi(v / 1e9, 1)} ${dil() === 'en' ? 'B' : 'mr'}`;
+  if (v >= 1e9) return `${sayi(v / 1e9, 1)} B`;
   if (v >= 1e6) return `${sayi(v / 1e6, 1)} M`;
-  if (v >= 1e3) return `${sayi(v / 1e3, 1)} ${dil() === 'en' ? 'k' : 'b'}`;
+  if (v >= 1e3) return `${sayi(v / 1e3, 1)} k`;
   return sayi(v);
 }
 
@@ -109,7 +109,7 @@ let secili = 'hound';
 const basilan = { hound: null, blockhound: null };
 
 // Logaritmik y ekseni için okunur süre çizgileri
-const Y_CIZGI = [[1, { tr: '1 sn', en: '1 s' }], [60, { tr: '1 dk', en: '1 min' }], [3600, { tr: '1 saat', en: '1 h' }], [86400, { tr: '1 gün', en: '1 day' }], [31_557_600, { tr: '1 yıl', en: '1 yr' }], [3_155_760_000, { tr: '100 yıl', en: '100 yr' }]];
+const Y_CIZGI = [[1, { zh: '1 秒', en: '1 s' }], [60, { zh: '1 分钟', en: '1 min' }], [3600, { zh: '1 小时', en: '1 h' }], [86400, { zh: '1 天', en: '1 day' }], [31_557_600, { zh: '1 年', en: '1 yr' }], [3_155_760_000, { zh: '100 年', en: '100 yr' }]];
 
 function ciz() {
   const kap = $('#zorluk-grafik');
@@ -144,7 +144,7 @@ function ciz() {
     : '';
 
   kap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="grafik-baslik">
-    <title id="grafik-baslik">${k.ad}: ${dil() === 'en' ? 'average time per mint by minted amount' : 'basılan miktara göre bir mintin ortalama süresi'}</title>
+    <title id="grafik-baslik">${k.ad}: ${dil() === 'en' ? 'average time per mint by minted amount' : '按已铸造数量显示每次 mint 的平均耗时'}</title>
     ${izgara}
     <line x1="${P.s}" x2="${W - P.sag}" y1="${H - P.alt}" y2="${H - P.alt}" class="eksen"/>
     ${xTik}
@@ -195,7 +195,7 @@ function tabloYaz(k, veri) {
 let promptTur = 'hound';
 function promptYaz() {
   const k = KOLEKSIYON[promptTur];
-  $('#prompt-metni').textContent = m().prompt(k, k.adres || '(henüz yayında değil)');
+  $('#prompt-metni').textContent = m().prompt(k, k.adres || '(not live yet)');
 }
 
 async function kopyala(metin, durumEl) {

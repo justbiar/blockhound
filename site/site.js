@@ -1,7 +1,7 @@
-// Blockhound tanıtım sitesi: TR / EN dil seçimi ve yayınlanmış rakamlar (istatistik.json). Cüzdana bağlanmaz.
+// Blockhound tanıtım sitesi: Çince (varsayılan) / İngilizce dil seçimi ve yayınlanmış rakamlar (istatistik.json). Cüzdana bağlanmaz.
 const EN = {
   atla: 'Skip to content', m_nasil: 'How it works', m_tur: 'Terminal',
-  tu_ust: 'Terminal tour', tu_baslik: 'A look inside', tu_alt: 'These screenshots come from the real terminal with live chain data. The terminal works in English and Turkish. The wallet balance and address are blurred; no personal portfolio is shown.',
+  tu_ust: 'Terminal tour', tu_baslik: 'A look inside', tu_alt: 'These screenshots come from the real terminal with live chain data. The terminal UI is available in English and Turkish. The wallet balance and address are blurred; no personal portfolio is shown.',
   tu_mintler: 'Mints', tu_siper: 'Launches', tu_liderler: 'Leaders', tu_ayarlar: 'Settings', m_guvenlik: 'Safety', m_rakamlar: 'Numbers', m_kur: 'Install', m_sss: 'FAQ',
   h_ust: 'BNB Chain · open-source mint agent',
   h_baslik: 'Sniffs out new mints from the first block.',
@@ -39,15 +39,16 @@ const EN = {
 };
 
 const el = (s) => document.querySelectorAll(s);
-const TR = {};
-for (const e of el('[data-i18n]')) TR[e.dataset.i18n] = e.textContent;
+// Sayfanın kendi metni Çincedir; İngilizce EN sözlüğünden gelir
+const ZH = {};
+for (const e of el('[data-i18n]')) ZH[e.dataset.i18n] = e.textContent;
 const depo = { oku: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, yaz: (k, v) => { try { localStorage.setItem(k, v); } catch { /* yoksa önemli değil */ } } };
-let dil = depo.oku('dil') || ((navigator.language || '').toLowerCase().startsWith('tr') ? 'tr' : 'en');
+let dil = depo.oku('dil') === 'en' ? 'en' : 'zh';
 
 function dilUygula(d) {
-  dil = d === 'en' ? 'en' : 'tr';
+  dil = d === 'en' ? 'en' : 'zh';
   document.documentElement.lang = dil;
-  for (const e of el('[data-i18n]')) e.textContent = (dil === 'en' ? EN : TR)[e.dataset.i18n] ?? e.textContent;
+  for (const e of el('[data-i18n]')) e.textContent = (dil === 'en' ? EN : ZH)[e.dataset.i18n] ?? e.textContent;
   for (const b of el('[data-dil]')) b.setAttribute('aria-pressed', String(b.dataset.dil === dil));
   depo.yaz('dil', dil);
   rakamTarihi();
@@ -58,13 +59,13 @@ for (const b of el('[data-dil]')) b.addEventListener('click', () => dilUygula(b.
 let rakamlar = null;
 function rakamTarihi() {
   if (!rakamlar) return;
-  const t = new Date(rakamlar.guncelleme).toLocaleDateString(dil === 'en' ? 'en-GB' : 'tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-  document.getElementById('rakam-tarih').textContent = dil === 'en' ? `Snapshot from ${t}, since ${new Date(rakamlar.baslangic).toLocaleDateString('en-GB')}.` : `${t} tarihli özet, ${new Date(rakamlar.baslangic).toLocaleDateString('tr-TR')} tarihinden beri.`;
+  const t = new Date(rakamlar.guncelleme).toLocaleDateString(dil === 'en' ? 'en-GB' : 'zh-CN', { day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('rakam-tarih').textContent = dil === 'en' ? `Snapshot from ${t}, since ${new Date(rakamlar.baslangic).toLocaleDateString('en-GB')}.` : `${t} 的快照，自 ${new Date(rakamlar.baslangic).toLocaleDateString('zh-CN')} 起统计。`;
 }
 fetch('istatistik.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((d) => {
   if (!d) return;
   rakamlar = d;
-  const say = (v) => Number(v).toLocaleString(dil === 'en' ? 'en-US' : 'tr-TR');
+  const say = (v) => Number(v).toLocaleString(dil === 'en' ? 'en-US' : 'zh-CN');
   const alanlar = { takip: say(d.takip), gonderilen: say(d.gonderilen), otomatik: say(d.otomatik), elenen: say(d.elenen), gas: d.ortalamaGasBnb != null ? `${Number(d.ortalamaGasBnb).toFixed(6)} BNB` : '–' };
   for (const [k, v] of Object.entries(alanlar)) document.querySelector(`[data-alan="${k}"]`).textContent = v;
   document.getElementById('rakamlar-liste').hidden = false;
@@ -76,33 +77,33 @@ dilUygula(dil);
 // Terminal turu: sekmeler görseli ve açıklamayı değiştirir. Ok tuşlarıyla sekmeler arasında gezilir
 const TUR = {
   mintler: {
-    tr: ['Mintler', 'Her yeni bloktaki kontratlar taranır, mint fonksiyonları cüzdanınla simüle edilir. Hazır, riskli, geçmiyor ve tükendi diye ayrılır; NFT ve token mintleri ayrı sekmelerdedir. Agent ID şartlı olanlar rozetle işaretlenir.', 'Blockhound Mintler ekranı: yeni mint kontratları, durum rozetleri ve Mint et düğmeleri'],
+    zh: ['Mint', '每个新区块中的合约都会被扫描，并用你的钱包模拟 mint 函数。分为就绪、有风险、未通过和已结束；NFT 和代币 mint 分开显示。需要 Agent ID 的项目会带标签。', 'Blockhound Mint 界面：新 mint 合约、状态标签和 Mint 按钮'],
     en: ['Mints', 'Contracts in every new block are scanned and their mint functions simulated with your wallet. They are sorted into ready, risky, failing and closed; NFT and token mints have separate tabs. Agent ID gated ones carry a badge.', 'Blockhound Mints screen: new mint contracts, status badges and Mint buttons'],
   },
   hound: {
-    tr: ['HOUND', 'Kendi token ve NFT koleksiyonumuzun canlı takibi: arz, sahipler, madenciler, gelir, mevcut zorluk ve dönem ilerlemesi. Hepsi zincirdeki Transfer ve Mined olaylarından hesaplanır.', 'Blockhound HOUND ekranı: HOUND ve BlockHound için arz, sahipler, madenciler ve zorluk'],
+    zh: ['HOUND', '实时追踪我们自己的代币和 NFT 系列：供应量、持有者、矿工、收入、当前难度和周期进度，全部由链上 Transfer 和 Mined 事件计算。', 'Blockhound HOUND 界面：HOUND 和 BlockHound 的供应量、持有者、矿工和难度'],
     en: ['HOUND', 'Live tracking of our own token and NFT collection: supply, holders, miners, revenue, current difficulty and epoch progress, all computed from on-chain Transfer and Mined events.', 'Blockhound HOUND screen: supply, holders, miners and difficulty for HOUND and BlockHound'],
   },
   siper: {
-    tr: ['Siper', 'Four.meme\'deki Agent ID lansmanları üç sütunda: yeni, dolmak üzere ve DEX\'e geçenler. Sahip sayısı, ilk 10 payı ve geliştirici satışlarıyla süzülebilir.', 'Blockhound Siper ekranı: yeni, dolmak üzere ve DEX\'e geçmiş lansman kartları'],
+    zh: ['新发射', 'Four.meme 上的 Agent ID 项目分三栏显示：新发射、即将满额和已上 DEX。可按持有人数、前十持仓占比和开发者抛售筛选。', 'Blockhound 新发射界面：新发射、即将满额和已上 DEX 的项目卡片'],
     en: ['Launches', 'Agent ID launches on Four.meme in three columns: new, nearly full and graduated to DEX. Filter by holders, top 10 share and developer sells.', 'Blockhound launches screen: new, nearly full and graduated launch cards'],
   },
   liderler: {
-    tr: ['Liderler', 'BSC\'de en çok kazanan, en isabetli ve en çok işlem yapan cüzdanlar; en çok kazandıran tokenleriyle birlikte. Sadece bilgi içindir.', 'Blockhound Liderler ekranı: kazanç, getiri ve isabete göre cüzdan sıralaması'],
+    zh: ['排行榜', 'BSC 上盈利最多、胜率最高和交易最活跃的钱包，以及让它们赚得最多的代币。仅供参考。', 'Blockhound 排行榜界面：按盈利、收益率和胜率排序的钱包'],
     en: ['Leaders', 'The top BSC wallets by profit, accuracy and activity, with the tokens that earned them the most. For information only.', 'Blockhound Leaders screen: wallets ranked by profit, return and accuracy'],
   },
   ayarlar: {
-    tr: ['Ayarlar', 'İşlem başı ve günlük BNB tavanları, otomatik mint sınırı, yapay zekâ modelleri ve RPC adresleri arayüzden yönetilir. Limitler sunucuda zorunludur.', 'Blockhound Ayarlar ekranı: limitler, ajan ayarları ve sistem ayarları'],
+    zh: ['设置', '单笔和每日 BNB 上限、自动 mint 上限、AI 模型和 RPC 地址都在界面中管理。限额由服务端强制执行。', 'Blockhound 设置界面：限额、代理设置和系统设置'],
     en: ['Settings', 'Per-trade and daily BNB caps, the auto-mint limit, AI models and RPC endpoints are all managed from the UI. Limits are enforced on the server.', 'Blockhound Settings screen: limits, agent settings and system settings'],
   },
 };
 let turSecili = 'mintler';
 function turGoster(ad, odakla = false) {
   turSecili = ad;
-  const [baslik, metin, alt] = TUR[ad][dil === 'en' ? 'en' : 'tr'];
+  const [baslik, metin, alt] = TUR[ad][dil === 'en' ? 'en' : 'zh'];
   const img = document.getElementById('tur-gorsel');
   if (!img) return;
-  img.src = `img/${dil === 'en' ? 'en/' : ''}${ad}.jpg`; img.alt = alt;
+  img.src = `img/en/${ad}.jpg`; img.alt = alt; // terminalin Çince arayüzü yok: iki dilde de İngilizce ekran
   img.height = ad === 'hound' ? 1100 : ad === 'mintler' ? 1000 : 900;
   document.getElementById('tur-baslik').textContent = baslik;
   document.getElementById('tur-metin').textContent = metin;

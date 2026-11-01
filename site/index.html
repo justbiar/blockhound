@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="tr">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Blockhound</title>
-  <meta name="description" content="Blockhound, BSC'de yeni mintleri ilk bloktan koklayan, risklileri eleyip ücretsiz olanları mintleyen kişisel bir ajan.">
+  <meta name="description" content="Blockhound：从第一个区块嗅出 BSC 新 mint，过滤风险项目并自动 mint 免费项目的个人代理。">
   <meta name="theme-color" content="#111111">
   <meta property="og:title" content="Blockhound">
-  <meta property="og:description" content="BSC'de yeni mintleri ilk bloktan koklayan ajan.">
+  <meta property="og:description" content="从第一个区块嗅出 BSC 新 mint 的代理。">
   <meta property="og:image" content="logo.svg">
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,21 +16,21 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <a class="atla" href="#ana" data-i18n="atla">İçeriğe geç</a>
+  <a class="atla" href="#ana" data-i18n="atla">跳到正文</a>
   <header class="ust">
     <a class="marka" href="#" aria-label="Blockhound"><img src="logo.svg" alt="" width="32" height="32"><span>Blockhound</span></a>
-    <nav class="menu" aria-label="Bölümler">
-      <a href="#nasil" data-i18n="m_nasil">Nasıl çalışır</a>
-      <a href="#tur" data-i18n="m_tur">Terminal</a>
-      <a href="#guvenlik" data-i18n="m_guvenlik">Güvenlik</a>
-      <a href="#rakamlar" data-i18n="m_rakamlar">Rakamlar</a>
+    <nav class="menu" aria-label="栏目">
+      <a href="#nasil" data-i18n="m_nasil">工作原理</a>
+      <a href="#tur" data-i18n="m_tur">终端</a>
+      <a href="#guvenlik" data-i18n="m_guvenlik">安全</a>
+      <a href="#rakamlar" data-i18n="m_rakamlar">数据</a>
       <a href="#hound">HOUND</a>
-      <a href="#kur" data-i18n="m_kur">Kur</a>
-      <a href="#sss" data-i18n="m_sss">SSS</a>
+      <a href="#kur" data-i18n="m_kur">安装</a>
+      <a href="#sss" data-i18n="m_sss">常见问题</a>
       <a href="https://github.com/justbiar/blockhound" class="gh" rel="noopener">GitHub</a>
     </nav>
     <div class="dil" role="group" aria-label="Dil / Language">
-      <button type="button" data-dil="tr" aria-pressed="true">TR</button>
+      <button type="button" data-dil="zh" aria-pressed="true">中文</button>
       <button type="button" data-dil="en" aria-pressed="false">EN</button>
     </div>
   </header>
@@ -38,12 +38,12 @@
   <main id="ana">
     <section class="kahraman">
       <div class="kahraman-metin">
-        <p class="ust-yazi" data-i18n="h_ust">BNB Chain · açık kaynak mint ajanı</p>
-        <h1 data-i18n="h_baslik">Yeni mintleri ilk bloktan koklar.</h1>
-        <p class="alt" data-i18n="h_alt">Blockhound zincirdeki her yeni kontratı tarar, mint fonksiyonlarını cüzdanınla simüle eder, riskli olanları eler ve ücretsiz olanları senin kurallarınla mintler. Piyasası açılan tokeni de ilk dakikada haber verir.</p>
+        <p class="ust-yazi" data-i18n="h_ust">BNB Chain · 开源打新代理</p>
+        <h1 data-i18n="h_baslik">从第一个区块嗅出新 mint。</h1>
+        <p class="alt" data-i18n="h_alt">Blockhound 扫描链上每一个新合约，用你的钱包地址模拟 mint 函数，过滤掉有风险的项目，并按你的规则自动 mint 免费项目。你持有的代币一开盘，第一分钟就会通知你。</p>
         <div class="cta">
-          <a class="dugme ana" href="https://github.com/justbiar/blockhound" rel="noopener" data-i18n="h_cta1">GitHub'da kaynak kod</a>
-          <a class="dugme" href="#kur" data-i18n="h_cta2">Kendi bilgisayarına kur</a>
+          <a class="dugme ana" href="https://github.com/justbiar/blockhound" rel="noopener" data-i18n="h_cta1">GitHub 源代码</a>
+          <a class="dugme" href="#kur" data-i18n="h_cta2">在自己电脑上运行</a>
         </div>
       </div>
       <div class="kahraman-gorsel" aria-hidden="true">
@@ -52,118 +52,118 @@
     </section>
 
     <section id="nasil" class="bolum">
-      <h2 data-i18n="n_baslik">Nasıl çalışır</h2>
+      <h2 data-i18n="n_baslik">工作原理</h2>
       <ol class="adimlar">
         <li>
           <span class="adim-no">01</span>
-          <h3 data-i18n="n1_b">Kokla</h3>
-          <p data-i18n="n1_m">Her yeni bloktaki kontrat kurulumlarını ve fabrika kontratlarının içinden doğanları yakalar. Proxy arkasındakileri ve Agent ID şartlı mintleri de tanır.</p>
+          <h3 data-i18n="n1_b">嗅探</h3>
+          <p data-i18n="n1_m">捕获每个新区块中部署的合约，包括工厂合约内部创建的合约。也能识别代理合约背后的实现和需要 Agent ID 的 mint。</p>
         </li>
         <li>
           <span class="adim-no">02</span>
-          <h3 data-i18n="n2_b">Simüle et</h3>
-          <p data-i18n="n2_m">Mint fonksiyonlarını cüzdan adresinle, gerçek işlem göndermeden dener. Ücretsiz mi, ücreti ne, tükenmiş mi, sana hak var mı: hepsini zincirden okur.</p>
+          <h3 data-i18n="n2_b">模拟</h3>
+          <p data-i18n="n2_m">用你的钱包地址尝试 mint 函数，不发送真实交易。是否免费、费用多少、是否已售罄、你是否有资格：全部直接从链上读取。</p>
         </li>
         <li>
           <span class="adim-no">03</span>
-          <h3 data-i18n="n3_b">Süz</h3>
-          <p data-i18n="n3_m">İşlem, token ve site güvenlik taramaları, taklit marka adları ve son kapı olarak cüzdan önizlemesi: izin isteyen, varlık getirmeyen ya da tuzak olan her şey elenir.</p>
+          <h3 data-i18n="n3_b">过滤</h3>
+          <p data-i18n="n3_m">交易、代币和网站安全扫描，冒充品牌名称检测，最后一道关是钱包预览：要求授权、不带来资产或是陷阱的项目都会被过滤。</p>
         </li>
         <li>
           <span class="adim-no">04</span>
-          <h3 data-i18n="n4_b">Mintle ve haber ver</h3>
-          <p data-i18n="n4_m">Kurallarını geçen ücretsiz mintleri günlük sınırın içinde otomatik gönderir, pahalı olanları sana sorar. Elindeki bir tokenin havuzu açılınca bildirim gelir.</p>
+          <h3 data-i18n="n4_b">mint 并通知</h3>
+          <p data-i18n="n4_m">通过你规则的免费 mint 会在每日上限内自动发送，较贵的会先问你。你持有的代币一建池就会收到通知。</p>
         </li>
       </ol>
     </section>
 
     <section id="tur" class="bolum">
-      <p class="ust-yazi" data-i18n="tu_ust">Terminal turu</p>
-      <h2 data-i18n="tu_baslik">İçeriden bir bakış</h2>
-      <p class="alt" data-i18n="tu_alt">Görüntüler gerçek terminalden, canlı zincir verisiyle alındı. Terminal Türkçe ve İngilizce kullanılabilir. Cüzdan bakiyesi ve adresi bulanıklaştırıldı; kişisel portföy gösterilmiyor.</p>
-      <div class="tur-sekme" role="tablist" aria-label="Terminal bölümleri">
-        <button type="button" role="tab" id="tur-mintler" aria-controls="tur-panel" aria-selected="true" data-tur="mintler" data-i18n="tu_mintler">Mintler</button>
+      <p class="ust-yazi" data-i18n="tu_ust">终端导览</p>
+      <h2 data-i18n="tu_baslik">内部一览</h2>
+      <p class="alt" data-i18n="tu_alt">截图来自真实终端和实时链上数据。终端支持英文和土耳其文界面。钱包余额和地址已模糊处理，不显示个人持仓。</p>
+      <div class="tur-sekme" role="tablist" aria-label="终端栏目">
+        <button type="button" role="tab" id="tur-mintler" aria-controls="tur-panel" aria-selected="true" data-tur="mintler" data-i18n="tu_mintler">Mint</button>
         <button type="button" role="tab" id="tur-hound" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tur="hound">HOUND</button>
-        <button type="button" role="tab" id="tur-siper" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tur="siper" data-i18n="tu_siper">Siper</button>
-        <button type="button" role="tab" id="tur-liderler" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tur="liderler" data-i18n="tu_liderler">Liderler</button>
-        <button type="button" role="tab" id="tur-ayarlar" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tur="ayarlar" data-i18n="tu_ayarlar">Ayarlar</button>
+        <button type="button" role="tab" id="tur-siper" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tur="siper" data-i18n="tu_siper">新发射</button>
+        <button type="button" role="tab" id="tur-liderler" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tur="liderler" data-i18n="tu_liderler">排行榜</button>
+        <button type="button" role="tab" id="tur-ayarlar" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tur="ayarlar" data-i18n="tu_ayarlar">设置</button>
       </div>
       <figure class="tur-panel" id="tur-panel" role="tabpanel" aria-labelledby="tur-mintler">
-        <div class="tur-cerceve"><img id="tur-gorsel" src="img/mintler.jpg" width="1440" height="1000" alt="Blockhound Mintler ekranı: yeni mint kontratları, durum rozetleri ve Mint et düğmeleri"></div>
+        <div class="tur-cerceve"><img id="tur-gorsel" src="img/en/mintler.jpg" width="1440" height="1000" alt="Blockhound Mint 界面：新 mint 合约、状态标签和 Mint 按钮"></div>
         <figcaption>
-          <h3 id="tur-baslik">Mintler</h3>
-          <p id="tur-metin">Her yeni bloktaki kontratlar taranır, mint fonksiyonları cüzdanınla simüle edilir. Hazır, riskli, geçmiyor ve tükendi diye ayrılır; NFT ve token mintleri ayrı sekmelerdedir. Agent ID şartlı olanlar rozetle işaretlenir.</p>
+          <h3 id="tur-baslik">Mint</h3>
+          <p id="tur-metin">每个新区块中的合约都会被扫描，并用你的钱包模拟 mint 函数。分为就绪、有风险、未通过和已结束；NFT 和代币 mint 分开显示。需要 Agent ID 的项目会带标签。</p>
         </figcaption>
       </figure>
     </section>
 
     <section id="guvenlik" class="bolum">
-      <h2 data-i18n="g_baslik">Güvenlik önce</h2>
+      <h2 data-i18n="g_baslik">安全第一</h2>
       <div class="kartlar">
-        <div class="kart"><h3 data-i18n="g1_b">Kendi bilgisayarında</h3><p data-i18n="g1_m">Blockhound senin bilgisayarında çalışır. Anahtarlar ve cüzdan oturumu dışarı çıkmaz. Bu site hiçbir cüzdana bağlanmaz, HOUND mint sayfası da dahil.</p></div>
-        <div class="kart"><h3 data-i18n="g2_b">Sert limitler</h3><p data-i18n="g2_m">İşlem başı ve günlük BNB tavanı, günlük otomatik mint sınırı ve tek tuşla acil durdurma. Limiti yükseltmek ayrı onay ister.</p></div>
-        <div class="kart"><h3 data-i18n="g3_b">İzin yok, sürpriz yok</h3><p data-i18n="g3_m">Token harcama izni, yetki değişikliği ya da cüzdandan beklenmeyen bir çıkış gösteren işlem hiç gönderilmez. Cüzdana bir şey getirmeyen çağrı da durdurulur.</p></div>
-        <div class="kart"><h3 data-i18n="g4_b">Ücretsiz süzgeç</h3><p data-i18n="g4_m">Karar, ücretli yapay zekâya gerek kalmadan zincir verisi ve ücretsiz güvenlik taramalarıyla verilir. İstersen yapay zekâ araştırması ayrıca açılabilir.</p></div>
+        <div class="kart"><h3 data-i18n="g1_b">运行在你自己的电脑上</h3><p data-i18n="g1_m">Blockhound 在你的电脑上运行。私钥和钱包会话不会离开你的电脑。本网站不连接任何钱包，HOUND mint 页面也一样。</p></div>
+        <div class="kart"><h3 data-i18n="g2_b">硬性限额</h3><p data-i18n="g2_m">单笔和每日 BNB 上限、每日自动 mint 上限，以及一键紧急停止。提高限额需要单独确认。</p></div>
+        <div class="kart"><h3 data-i18n="g3_b">无授权，无意外</h3><p data-i18n="g3_m">出现代币授权、权限变更或钱包意外转出的交易一律不发送。不给钱包带来任何资产的调用也会被拦截。</p></div>
+        <div class="kart"><h3 data-i18n="g4_b">免费过滤器</h3><p data-i18n="g4_m">决策依靠链上数据和免费的安全扫描，无需付费 AI。需要的话可以另外开启 AI 研究。</p></div>
       </div>
     </section>
 
     <section id="rakamlar" class="bolum">
-      <h2 data-i18n="r_baslik">Rakamlar</h2>
-      <p class="alt" id="rakam-tarih" data-i18n="r_yok">Rakamlar henüz yayınlanmadı.</p>
+      <h2 data-i18n="r_baslik">数据</h2>
+      <p class="alt" id="rakam-tarih" data-i18n="r_yok">数据尚未发布。</p>
       <dl class="rakamlar" id="rakamlar-liste" hidden>
-        <div><dt data-i18n="r1">Takip edilen kontrat (14 gün)</dt><dd data-alan="takip">–</dd></div>
-        <div><dt data-i18n="r2">Gönderilen mint</dt><dd data-alan="gonderilen">–</dd></div>
-        <div><dt data-i18n="r3">Otomatik mint</dt><dd data-alan="otomatik">–</dd></div>
-        <div><dt data-i18n="r4">Riskli diye elenen</dt><dd data-alan="elenen">–</dd></div>
-        <div><dt data-i18n="r5">Mint başına ortalama gas</dt><dd data-alan="gas">–</dd></div>
+        <div><dt data-i18n="r1">追踪的合约（14 天）</dt><dd data-alan="takip">–</dd></div>
+        <div><dt data-i18n="r2">已发送 mint</dt><dd data-alan="gonderilen">–</dd></div>
+        <div><dt data-i18n="r3">自动 mint</dt><dd data-alan="otomatik">–</dd></div>
+        <div><dt data-i18n="r4">因风险被过滤</dt><dd data-alan="elenen">–</dd></div>
+        <div><dt data-i18n="r5">每次 mint 平均 gas</dt><dd data-alan="gas">–</dd></div>
       </dl>
     </section>
 
     <section id="kur" class="bolum">
-      <h2 data-i18n="k_baslik">Kendi bilgisayarına kur</h2>
-      <p class="alt" data-i18n="k_alt">Blockhound açık kaynaktır (MIT). İndir, kendi cüzdanınla çalıştır, istediğin gibi geliştir. Cüzdanın ve anahtarların senin bilgisayarında kalır.</p>
+      <h2 data-i18n="k_baslik">在自己电脑上运行</h2>
+      <p class="alt" data-i18n="k_alt">Blockhound 是开源项目（MIT）。下载后用你自己的钱包运行，随意修改。你的钱包和私钥都留在你自己的电脑上。</p>
       <ol class="kurulum">
-        <li><span data-i18n="k1">Node.js 20+ ve Binance Agentic Wallet CLI'ı kur</span><code>npm i -g @binance/agentic-wallet</code></li>
-        <li><span data-i18n="k2">Depoyu indir</span><code>git clone https://github.com/justbiar/blockhound.git</code></li>
-        <li><span data-i18n="k3">Bağımlılıkları kur ve ayar dosyasını oluştur</span><code>npm install &amp;&amp; cp .env.example .env</code></li>
-        <li><span data-i18n="k4">Başlat ve tarayıcıda aç: 127.0.0.1:8787</span><code>npm start</code></li>
+        <li><span data-i18n="k1">安装 Node.js 20+ 和 Binance Agentic Wallet CLI</span><code>npm i -g @binance/agentic-wallet</code></li>
+        <li><span data-i18n="k2">克隆仓库</span><code>git clone https://github.com/justbiar/blockhound.git</code></li>
+        <li><span data-i18n="k3">安装依赖并创建配置文件</span><code>npm install &amp;&amp; cp .env.example .env</code></li>
+        <li><span data-i18n="k4">启动并在浏览器打开：127.0.0.1:8787</span><code>npm start</code></li>
       </ol>
-      <p class="not" data-i18n="k_not">Varsayılan mod simülasyondur: hiçbir işlem gönderilmez. Canlıya geçmeden önce limitleri düşük tut. Ayrıntılar README'de.</p>
-      <div class="cta"><a class="dugme ana" href="https://github.com/justbiar/blockhound#readme" rel="noopener" data-i18n="k_cta">Kurulum rehberi</a><a class="dugme" href="https://github.com/justbiar/blockhound/issues" rel="noopener" data-i18n="k_cta2">Hata bildir ya da öner</a></div>
+      <p class="not" data-i18n="k_not">默认是模拟模式：不会发送任何交易。切换到实盘前请把限额设低。详见 README。</p>
+      <div class="cta"><a class="dugme ana" href="https://github.com/justbiar/blockhound#readme" rel="noopener" data-i18n="k_cta">安装指南</a><a class="dugme" href="https://github.com/justbiar/blockhound/issues" rel="noopener" data-i18n="k_cta2">反馈问题或建议</a></div>
     </section>
 
     <section id="hound" class="bolum hound">
       <div>
-        <p class="ust-yazi" data-i18n="t_ust">İş kanıtıyla mint</p>
-        <h2 data-i18n="t_baslik">HOUND ve BlockHound</h2>
-        <p data-i18n="t_m1">HOUND topluluk tokenı, BlockHound ise NFT koleksiyonu. Önceden basılmış tek bir adet yok: hash'i herkes arayabilir ama yalnızca Binance Agent ID sahibi cüzdanlar mintleyebilir. Arz sınırsız ama her dönemde zorluk iki katına çıkar, bir süre sonra mint pratikte imkânsızlaşır. 10.000 HOUND 0.50 dolar, bir BlockHound 0.10 dolar; ücretler projeye destek olarak kasaya gider.</p>
-        <p class="uyari" data-i18n="t_uyari">HOUND bir yatırım ürünü değildir. Kâr, getiri, temettü ya da fiyat vaadi yoktur; değeri sıfır olabilir. Yalnızca kaybetmeyi göze aldığın kadarıyla destek ol.</p>
+        <p class="ust-yazi" data-i18n="t_ust">工作量证明 mint</p>
+        <h2 data-i18n="t_baslik">HOUND 与 BlockHound</h2>
+        <p data-i18n="t_m1">HOUND 是社区代币，BlockHound 是 NFT 系列。没有任何预挖：任何人都可以计算哈希，但只有持有 Binance Agent ID 的钱包才能 mint。供应量无上限，但每个周期难度翻倍，一段时间后 mint 实际上将无法完成。10,000 HOUND 售价 0.50 美元，一个 BlockHound 售价 0.10 美元；费用进入项目金库以支持开发。</p>
+        <p class="uyari" data-i18n="t_uyari">HOUND 不是投资产品。不承诺任何收益、分红或价格；其价值可能为零。请只用你能承受损失的金额支持。</p>
         <dl class="ozellik">
           <div><dt>HOUND</dt><dd><a href="https://bscscan.com/address/0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac#code" rel="noopener"><code>0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac</code></a></dd></div>
           <div><dt>BlockHound</dt><dd><a href="https://bscscan.com/address/0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd#code" rel="noopener"><code>0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd</code></a></dd></div>
         </dl>
         <div class="cta">
-          <a class="dugme ana" href="mint.html" data-i18n="t_cta">Mint sayfası</a>
-          <a class="dugme" href="mint.html#zorluk" data-i18n="t_cta2">Zorluk grafiği</a>
-          <a class="dugme" href="mint.html#prompt" data-i18n="t_cta3">Ajan promptu</a>
+          <a class="dugme ana" href="mint.html" data-i18n="t_cta">Mint 页面</a>
+          <a class="dugme" href="mint.html#zorluk" data-i18n="t_cta2">难度图表</a>
+          <a class="dugme" href="mint.html#prompt" data-i18n="t_cta3">代理提示词</a>
         </div>
       </div>
     </section>
 
     <section id="sss" class="bolum">
-      <h2 data-i18n="s_baslik">Sık sorulanlar</h2>
-      <details><summary data-i18n="s1_s">Blockhound benim cüzdanıma erişir mi?</summary><p data-i18n="s1_c">Tanıtım sayfaları hiçbir cüzdana bağlanmaz. Mint sayfası da cüzdana bağlanmaz: hash'i tarayıcında arar, gönderimi sen kendi ajan cüzdanından baw ile yaparsın. Blockhound uygulaması ise kurulduğu bilgisayarda, sahibinin kendi cüzdan oturumuyla ve onun koyduğu limitlerle çalışır.</p></details>
-      <details><summary data-i18n="s2_s">Hangi zincirde çalışıyor?</summary><p data-i18n="s2_c">BNB Chain (BSC). Hem NFT mintlerini hem de bir mint kontratı üzerinden dağıtılan token mintlerini tanır.</p></details>
-      <details><summary data-i18n="s3_s">Mintlenen her şey para eder mi?</summary><p data-i18n="s3_c">Hayır. Ücretsiz mintlerin çoğunun değeri sıfırdır. Token mintlerinde havuz genelde mint bitince kurulur, bazıları hiç kurulmaz. Blockhound fırsatı yakalamayı kolaylaştırır, kazanç garanti etmez.</p></details>
-      <details><summary data-i18n="s4_s">HOUND bir yatırım mı?</summary><p data-i18n="s4_c">Hayır. HOUND ve BlockHound projeye destek içindir; hiçbir getiri ya da fiyat vaadi taşımaz, değerleri sıfır olabilir.</p></details>
-      <details><summary data-i18n="s5_s">Kendim kurabilir miyim?</summary><p data-i18n="s5_c">Evet. Blockhound MIT lisanslı açık kaynaktır: GitHub'dan indirip kendi bilgisayarında kendi cüzdanınla çalıştırabilir, kodu inceleyip geliştirebilirsin.</p></details>
-      <details><summary data-i18n="s6_s">Katkıda bulunabilir miyim?</summary><p data-i18n="s6_c">Elbette. GitHub'da bir konu (issue) açarak başla; güvenlik açıklarını herkese açık konu yerine özel bildirimle ilet.</p></details>
+      <h2 data-i18n="s_baslik">常见问题</h2>
+      <details><summary data-i18n="s1_s">Blockhound 会访问我的钱包吗？</summary><p data-i18n="s1_c">介绍页面不连接任何钱包。Mint 页面也不连接钱包：它在你的浏览器里计算哈希，由你用自己的代理钱包通过 baw 发送。Blockhound 应用运行在安装它的电脑上，使用电脑主人自己的钱包会话和其设置的限额。</p></details>
+      <details><summary data-i18n="s2_s">支持哪条链？</summary><p data-i18n="s2_c">BNB Chain（BSC）。既能识别 NFT mint，也能识别通过 mint 合约分发的代币 mint。</p></details>
+      <details><summary data-i18n="s3_s">mint 到的东西都值钱吗？</summary><p data-i18n="s3_c">不是。大多数免费 mint 价值为零。代币 mint 的流动性池通常在 mint 结束后才建立，有些永远不会建立。Blockhound 让你更容易抓住机会，但不保证盈利。</p></details>
+      <details><summary data-i18n="s4_s">HOUND 是投资吗？</summary><p data-i18n="s4_c">不是。HOUND 和 BlockHound 用于支持项目；不承诺任何收益或价格，其价值可能为零。</p></details>
+      <details><summary data-i18n="s5_s">我可以自己部署吗？</summary><p data-i18n="s5_c">可以。Blockhound 是 MIT 许可的开源项目：从 GitHub 下载后，用你自己的钱包在自己电脑上运行，可以阅读和改进代码。</p></details>
+      <details><summary data-i18n="s6_s">我可以贡献代码吗？</summary><p data-i18n="s6_c">当然。先在 GitHub 上开一个 issue；安全漏洞请私下报告，不要公开发 issue。</p></details>
     </section>
   </main>
 
   <footer class="alt-bilgi">
     <div class="marka kucuk"><img src="logo.svg" alt="" width="24" height="24"><span>Blockhound</span></div>
-    <p data-i18n="f_m">Bağımsız, açık kaynaklı (MIT) bir projedir; Binance, OKX ya da başka bir kuruluşla bağlantısı yoktur. Hiçbir içerik yatırım tavsiyesi değildir.</p>
+    <p data-i18n="f_m">独立的开源（MIT）项目，与 Binance、OKX 或任何其他机构无关。所有内容均不构成投资建议。</p>
     <a class="gh-alt" href="https://github.com/justbiar/blockhound" rel="noopener">GitHub</a>
   </footer>
   <script src="site.js"></script>

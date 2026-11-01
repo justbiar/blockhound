@@ -41,21 +41,21 @@ const EN = {
   f_m: 'An independent, open-source (MIT) project with no affiliation to Binance, OKX or any other organization. Nothing here is investment advice.',
 };
 const M = {
-  tr: {
-    yayinYok: 'Kontratlar henüz yayında değil. Şimdilik deneme madenciliğiyle bilgisayarının hızını görebilirsin; bulunan hash hiçbir yere gönderilmez.',
-    yayinVar: (a) => `Ağ: ${a}. Kontrat adreslerini BscScan'de doğrula; baw önizlemesinde başka bir adres görürsen gönderme.`,
-    ajanBulundu: (ad, a) => `${ad} → ${a}. Agent ID kaydı var, bu adres için aranacak.`,
-    ajanAdres: (a) => `${a} için aranacak. Agent ID kaydı var.`,
-    ajanYok: 'Bu ada kayıtlı bir Agent ID bulunamadı.', ajanKayitsiz: 'Bu adresin Agent ID kaydı yok: hash bulunsa da mint reddedilir.',
-    ajanGecersiz: 'Bir Agent ID adı (örneğin biar.ai) ya da 0x ile başlayan bir adres yaz.', ajanBekle: 'Kayıt okunuyor…',
-    ajanOnce: 'Önce yukarıdan bir ajan seç.',
-    tahmin: (d, s) => `Ortalama ${d} deneme · bu hızla yaklaşık ${s}`, tahminHizsiz: (d) => `Ortalama ${d} deneme`,
-    araniyor: (d) => `Aranıyor… ${d} deneme`, bulundu: (d, s) => `Çözüm bulundu: yaklaşık ${d} denemede, ${s}. Aşağıdaki komutlarla ajan cüzdanından gönder.`,
-    demoBulundu: (d, s) => `Deneme çözümü bulundu: yaklaşık ${d} denemede, ${s}. Kontratlar yayınlanınca burada gönderim komutları çıkar.`,
-    gecersiz: 'Bu arada dönem değişti ya da çözüm kullanıldı; yeniden aranıyor.', kopyalandi: 'Kopyalandı.',
-    hata: (m) => `Hata: ${m}`,
-    sn: (n) => n < 1 ? '1 saniyeden kısa' : n < 90 ? `${Math.round(n)} saniye` : n < 5400 ? `${Math.round(n / 60)} dakika` : n < 172800 ? `${Math.round(n / 3600)} saat` : `${Math.round(n / 86400)} gün`,
-    bit: (b) => `${b} bit`, mint: (n) => `${n} mint`,
+  zh: {
+    yayinYok: '合约尚未上线。目前你可以用测试挖矿查看电脑的算力；找到的哈希不会发送到任何地方。',
+    yayinVar: (a) => `网络：${a}。请在 BscScan 上核对合约地址；如果 baw 预览显示的是其他地址，请不要发送。`,
+    ajanBulundu: (ad, a) => `${ad} → ${a}。已找到 Agent ID，将为该地址计算。`,
+    ajanAdres: (a) => `将为 ${a} 计算。已找到 Agent ID。`,
+    ajanYok: '没有找到以此名称注册的 Agent ID。', ajanKayitsiz: '该地址没有 Agent ID：即使找到哈希，mint 也会被拒绝。',
+    ajanGecersiz: '请输入 Agent ID 名称（例如 biar.ai）或以 0x 开头的地址。', ajanBekle: '正在读取注册表…',
+    ajanOnce: '请先在上方选择一个代理。',
+    tahmin: (d, s) => `平均需要 ${d} 次尝试 · 按当前速度约 ${s}`, tahminHizsiz: (d) => `平均需要 ${d} 次尝试`,
+    araniyor: (d) => `计算中… ${d} 次尝试`, bulundu: (d, s) => `找到解：约 ${d} 次尝试，用时 ${s}。请用下方命令从代理钱包发送。`,
+    demoBulundu: (d, s) => `找到测试解：约 ${d} 次尝试，用时 ${s}。合约上线后这里会显示发送命令。`,
+    gecersiz: '期间周期已变化或该解已被使用；正在重新计算。', kopyalandi: '已复制。',
+    hata: (m) => `错误：${m}`,
+    sn: (n) => n < 1 ? '不到 1 秒' : n < 90 ? `${Math.round(n)} 秒` : n < 5400 ? `${Math.round(n / 60)} 分钟` : n < 172800 ? `${Math.round(n / 3600)} 小时` : `${Math.round(n / 86400)} 天`,
+    bit: (b) => `${b} 位`, mint: (n) => `${n} 次 mint`,
   },
   en: {
     yayinYok: 'The contracts are not live yet. For now you can try test mining to see your computer\'s speed; the hash found is not sent anywhere.',
@@ -78,11 +78,12 @@ const M = {
 const $ = (s, k = document) => k.querySelector(s);
 const $$ = (s, k = document) => [...k.querySelectorAll(s)];
 const depo = { oku: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, yaz: (k, v) => { try { localStorage.setItem(k, v); } catch { /* önemli değil */ } } };
-const TR = {};
-for (const e of $$('[data-i18n]')) TR[e.dataset.i18n] = e.textContent;
-let dil = depo.oku('dil') || ((navigator.language || '').toLowerCase().startsWith('tr') ? 'tr' : 'en');
+// Sayfanın kendi metni Çincedir; İngilizce EN sözlüğünden gelir
+const ZH = {};
+for (const e of $$('[data-i18n]')) ZH[e.dataset.i18n] = e.textContent;
+let dil = depo.oku('dil') === 'en' ? 'en' : 'zh';
 const t = () => M[dil];
-const sayi = (v) => Number(v).toLocaleString(dil === 'en' ? 'en-US' : 'tr-TR');
+const sayi = (v) => Number(v).toLocaleString(dil === 'en' ? 'en-US' : 'zh-CN');
 
 // Seçiciler (cast sig ile hesaplandı). Kayıt kontratı: her Agent ID bir NFT, kimlik = keccak256(ad)
 const SEC = { challenge: '0xd2ef7398', difficultyBits: '0x249379ad', mintFee: '0x13966db5', minted: '0x4f02c420', epochSize: '0x572d356e', mint: '0xa0712d68', check: '0x96fb7217' };
@@ -112,7 +113,7 @@ async function topluCagri(cagrilar) {
       if (!r.ok) throw new Error(`RPC ${r.status}`);
       const j = await r.json();
       const sirali = (Array.isArray(j) ? j : [j]).sort((a, b) => a.id - b.id);
-      if (sirali.length !== cagrilar.length) throw new Error('RPC eksik yanıt');
+      if (sirali.length !== cagrilar.length) throw new Error('RPC: incomplete response');
       return sirali.map((x) => { if (x.error) throw new Error(x.error.message || 'RPC'); return x.result; });
     } catch (e) { son = e; }
   }
@@ -201,7 +202,7 @@ function komutYaz(k, nonce) {
   const veri = SEC.mint + u256(nonce);
   k.alan('komut-metni').textContent =
     `baw contract-call preview --binanceChainId ${AG.zincirId} --from ${ajan.adres} --to ${k.adres} --value ${deger} --inputData ${veri}\n`
-    + 'baw contract-call execute --requestId <önizlemedeki requestId>';
+    + `baw contract-call execute --requestId ${dil === 'en' ? '<requestId from the preview>' : '<预览中的 requestId>'}`;
   k.alan('komut').hidden = false;
 }
 
@@ -270,9 +271,9 @@ $('#ajan-form').addEventListener('submit', async (e) => {
 });
 
 function dilUygula(d) {
-  dil = d === 'en' ? 'en' : 'tr';
-  document.documentElement.lang = dil;
-  for (const e of $$('[data-i18n]')) e.textContent = (dil === 'en' ? EN : TR)[e.dataset.i18n] ?? e.textContent;
+  dil = d === 'en' ? 'en' : 'zh';
+  document.documentElement.lang = dil === 'en' ? 'en' : 'zh-CN';
+  for (const e of $$('[data-i18n]')) e.textContent = (dil === 'en' ? EN : ZH)[e.dataset.i18n] ?? e.textContent;
   for (const b of $$('[data-dil]')) b.setAttribute('aria-pressed', String(b.dataset.dil === dil));
   depo.yaz('dil', dil);
   $('#durum-yayin').textContent = yayinda ? t().yayinVar(AG.ad) : t().yayinYok;
