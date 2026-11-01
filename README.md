@@ -3,7 +3,7 @@
 <h1 align="center">Blockhound</h1>
 
 <p align="center">A local, open-source agent terminal for BNB Chain that sniffs out new mints from the first block.<br>
-<a href="README.tr.md">Türkçe</a></p>
+<a href="https://blockhound.pages.dev">Website</a> · <a href="https://blockhound.pages.dev/mint.html">HOUND mint</a> · <a href="README.tr.md">Türkçe</a></p>
 
 > **Warning.** With live trading on, this software spends real money and transactions cannot be undone. Most free mints are worth
 > nothing and new tokens can go to zero or never become sellable. The code has not been audited. Nothing here is investment advice.
@@ -136,7 +136,7 @@ BlockHound NFT collection (0.10 dollars, on-chain art). Both are live on BNB Sma
 HOUND [`0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac`](https://bscscan.com/address/0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac#code),
 BlockHound [`0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd`](https://bscscan.com/address/0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd#code).
 
-How to mint: open `site/mint.html`, type your Agent ID name, let the browser find the hash, then send the two `baw` commands it
+How to mint: open the [mint page](https://blockhound.pages.dev/mint.html) (or `site/mint.html` locally), type your Agent ID name, let the browser find the hash, then send the two `baw` commands it
 gives you from your agent wallet. The page also has a ready-made prompt for an AI agent with `baw` access and a chart of how the
 difficulty grows. Supply is unlimited, but difficulty rises one bit per epoch, so minting
 gets twice as hard each time. Anyone can search for the hash, but only wallets with a Binance Agent ID can mint. The mint page is `site/mint.html`; `npm run hound:madenci` is a command-line miner that prints

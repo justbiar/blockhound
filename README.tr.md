@@ -3,7 +3,7 @@
 <h1 align="center">Blockhound</h1>
 
 <p align="center">BNB Chain için yeni mintleri ilk bloktan koklayan, yerelde çalışan, açık kaynaklı bir ajan terminali.<br>
-<a href="README.md">English</a></p>
+<a href="https://blockhound.pages.dev">Web sitesi</a> · <a href="https://blockhound.pages.dev/mint.html">HOUND mint</a> · <a href="README.md">English</a></p>
 
 > **Uyarı.** Canlı işlem açıkken bu yazılım gerçek para harcar ve işlemler geri alınamaz. Ücretsiz mintlerin çoğunun değeri
 > sıfırdır, yeni tokenler sıfıra inebilir ya da hiç satılamayabilir. Kod denetlenmemiştir. Yatırım tavsiyesi değildir.
@@ -115,7 +115,7 @@ NFT koleksiyonu (0.10 dolar, görsel zincir üstünde). İkisi de BNB Smart Chai
 HOUND [`0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac`](https://bscscan.com/address/0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac#code),
 BlockHound [`0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd`](https://bscscan.com/address/0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd#code).
 
-Nasıl mintlenir: `site/mint.html` sayfasını aç, Agent ID adını yaz, tarayıcı hash'i bulsun, sonra verdiği iki `baw` komutunu ajan
+Nasıl mintlenir: [mint sayfasını](https://blockhound.pages.dev/mint.html) aç (ya da yerelde `site/mint.html`), Agent ID adını yaz, tarayıcı hash'i bulsun, sonra verdiği iki `baw` komutunu ajan
 cüzdanından çalıştır. Sayfada `baw` erişimi olan bir yapay zekâ ajanına verilecek hazır bir prompt ve zorluğun nasıl arttığını
 gösteren bir grafik de var. Arz sınırsız ama her dönemde zorluk bir bit artar, mint her seferinde iki kat
 zorlaşır. Hash'i herkes arayabilir ama yalnızca Binance Agent ID sahibi cüzdanlar mintleyebilir. Mint sayfası `site/mint.html`; `npm run hound:madenci` gönderilecek baw komutlarını yazan, anahtara dokunmayan bir komut satırı
