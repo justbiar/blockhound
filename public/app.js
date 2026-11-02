@@ -4,7 +4,9 @@ const TOKEN = document.querySelector('meta[name="api-token"]').content;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const kisalt = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
-const usd = (v) => (v == null || Number.isNaN(v) ? '?' : v > 0 && v < 0.01 ? `$${v}` : `$${Number(v).toFixed(2)}`);
+// Çok küçük tutarlar bilimsel gösterime düşmesin (9.2e-7 kesilince "$9" gibi okunuyordu): 3 anlamlı basamak, düz ondalık
+const anlamli = (v) => Number(v).toLocaleString('en-US', { maximumSignificantDigits: 3, useGrouping: false });
+const usd = (v) => (v == null || Number.isNaN(v) ? '?' : v > 0 && v < 0.01 ? `$${anlamli(v)}` : `$${Number(v).toFixed(2)}`);
 const sayiYaz = (v, b = 6) => (v == null ? '?' : Number(v).toLocaleString(YEREL, { maximumFractionDigits: b }));
 const depoOku = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 const depoYaz = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* depolama yoksa önemli değil */ } };
@@ -473,7 +475,7 @@ const bnbYaz = (v) => (v == null ? '' : `${Number(v).toFixed(6)} BNB`);
 const isaretli = (v, ek = '') => (v == null || Number.isNaN(v) ? '<span class="soluk">?</span>'
   : `<span class="${v > 0.004 ? 'kazanc' : v < -0.004 ? 'kayip' : ''}">${v > 0 ? '+' : v < 0 ? '−' : ''}${esc(usd(Math.abs(v)))}${ek}</span>`);
 const yuzdeYaz = (v) => (v == null ? '' : ` <span class="${v > 0 ? 'kazanc' : v < 0 ? 'kayip' : 'soluk'}">(${v > 0 ? '+' : ''}${v.toFixed(1)}%)</span>`);
-const fiyatYaz = (v) => (v == null ? '?' : v >= 1 ? `$${v.toFixed(2)}` : `$${Number(v.toPrecision(3))}`);
+const fiyatYaz = (v) => (v == null ? '?' : v >= 1 ? `$${v.toFixed(2)}` : `$${anlamli(v)}`);
 const KAYNAK = { mint: 'Mint', alim: 'Alım', bedava: 'Bedava geldi', takas: 'Takas' };
 const tarihKisa = (z) => (z ? new Date(z).toLocaleString(YEREL, { dateStyle: 'short', timeStyle: 'short' }) : '');
 const renk = (ad) => getComputedStyle(document.documentElement).getPropertyValue(ad).trim();
