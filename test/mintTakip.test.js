@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { id, parseEther, AbiCoder } from 'ethers';
-import { MintTakip, siniflandir, revertSebebi, AGENT_ID_REGISTRY, acilisZamani } from '../src/mintTakip.js';
+import { MintTakip, siniflandir, revertSebebi, AGENT_ID_REGISTRY, acilisZamani, gorselCoz } from '../src/mintTakip.js';
 
 const BEN = '0x00000000000000000000000000000000B10c4040';
 const NFT = '0x2DC57B951A42B7D86449cD7928DcbaB67867A780';
@@ -294,4 +294,46 @@ test('inceleme kuyruğu: canlı kontrat öne geçer, kuyruk doluyken boşluk dol
   t.olayTur = async () => {};
   await t.tur();
   assert.equal(dolduruldu, false);
+});
+
+// Ghoulito kalıbı: önce bedava havuz (FREE_SUPPLY), dolunca aynı mint PRICE ile ücretli
+function havuzluProvider({ sayac = true, uri = '' } = {}) {
+  const imzalar = ['mint(uint256)', 'FREE_SUPPLY()', 'MAX_SUPPLY()', 'totalSupply()', 'PRICE()', 'ownerOf(uint256)', 'tokenURI(uint256)'];
+  if (sayac) imzalar.push('freeClaimed()');
+  const u = (n) => abi.encode(['uint256'], [n]);
+  return sahteProvider({
+    kod: kodYap(imzalar),
+    mintler: { 'mint(uint256)': () => true },
+    okumalar: { 'FREE_SUPPLY()': u(313), 'MAX_SUPPLY()': u(9009), 'totalSupply()': u(318), 'PRICE()': u(50_000_000_000_000n),
+      'freeClaimed()': u(312), 'tokenURI(uint256)': abi.encode(['string'], [uri]) },
+  });
+}
+
+test('iki fazlı havuz: bedava sayacı varsa kesin, yoksa toplam arzdan yaklaşık okunur', async () => {
+  const r = await takip(havuzluProvider()).incele(NFT);
+  assert.deepEqual(r.havuz, { bedava: '313', dolan: '312', yaklasik: false });
+  const y = await takip(havuzluProvider({ sayac: false })).incele(NFT);
+  assert.deepEqual(y.havuz, { bedava: '313', dolan: '313', yaklasik: true });
+});
+
+test('koleksiyon görseli tokenURI metadata\'sından okunur', async () => {
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg"/>';
+  const meta = 'data:application/json;base64,' + Buffer.from(JSON.stringify({ name: 'x', image_data: svg })).toString('base64');
+  const r = await takip(havuzluProvider({ uri: meta })).incele(NFT);
+  assert.equal(r.gorsel, 'data:image/svg+xml;base64,' + Buffer.from(svg).toString('base64'));
+});
+
+test('görsel çözümü: sadece güvenli adresler, yerel ağa istek yok', async () => {
+  const istekler = [];
+  const fetchFn = async (url) => {
+    istekler.push(String(url));
+    return { ok: true, headers: new Map([['content-type', 'application/json']]), text: async () => JSON.stringify({ image: 'ipfs://Qm1/1.png' }) };
+  };
+  assert.equal(await gorselCoz('https://meta.example/1.json', fetchFn), 'https://ipfs.io/ipfs/Qm1/1.png');
+  assert.equal(await gorselCoz('ipfs://QmMeta/1', fetchFn), 'https://ipfs.io/ipfs/Qm1/1.png');
+  assert.equal(await gorselCoz('http://127.0.0.1:8788/api/x', fetchFn), null);
+  assert.equal(await gorselCoz('https://localhost/x', fetchFn), null);
+  assert.equal(await gorselCoz('data:application/json,' + encodeURIComponent(JSON.stringify({ image: 'javascript:alert(1)' })), fetchFn), null);
+  assert.equal(await gorselCoz('https://cdn.example/a.webp', fetchFn), 'https://cdn.example/a.webp');
+  assert.deepEqual(istekler, ['https://meta.example/1.json', 'https://ipfs.io/ipfs/QmMeta/1']);
 });

@@ -1,9 +1,13 @@
-// Arayüz dili. Türkçe asıl dildir; İngilizce seçiliyse sayfadaki metinler çizildikçe yerinde çevrilir: birebir eşleşen
-// metinler SOZLUK'ten, içinde sayı ya da ad geçenler KALIPLAR'dan. Bilinmeyen metin (token adları, adresler) olduğu gibi kalır.
+// Arayüz dili. Türkçe asıl dildir; İngilizce ya da Çince seçiliyse sayfadaki metinler çizildikçe yerinde çevrilir: birebir eşleşen
+// metinler SOZLUK'ten, içinde sayı ya da ad geçenler KALIPLAR'dan. Çince, İngilizce karşılık üzerinden dil-zh.js'ten gelir;
+// Çincesi olmayan metin İngilizce gösterilir. Bilinmeyen metin (token adları, adresler) olduğu gibi kalır.
 // Dil değişince sayfa yeniden yüklenir; sayı ve tarih biçimi de YEREL ile dile göre değişir.
+import { ZH, KALIP_ZH } from './dil-zh.js';
+
 const ANAHTAR = 'blockhound-dil';
-export const DIL = (() => { try { return localStorage.getItem(ANAHTAR) === 'en' ? 'en' : 'tr'; } catch { return 'tr'; } })();
-export const YEREL = DIL === 'en' ? 'en-US' : 'tr-TR';
+const DILLER = { tr: ['TR', 'tr-TR', 'Dil'], en: ['EN', 'en-US', 'Language'], zh: ['中文', 'zh-CN', '语言'] };
+export const DIL = (() => { try { const d = localStorage.getItem(ANAHTAR); return d in DILLER ? d : 'tr'; } catch { return 'tr'; } })();
+export const YEREL = DILLER[DIL][1];
 export function dilDegistir(d) {
   try { localStorage.setItem(ANAHTAR, d); } catch { /* depolama yoksa yalnızca bu oturum */ }
   location.reload();
@@ -42,7 +46,7 @@ const SOZLUK = new Map(Object.entries({
   // Portföy
   'Cüzdanın tüm zincir geçmişinden hesaplanır: mintler, alımlar, satışlar, transferler ve gas ·': "Computed from your wallet's full chain history: mints, buys, sells, transfers and gas ·",
   'Yenile': 'Refresh', 'Piyasası açılmayı bekleyen tokenler': 'Tokens waiting for a market', 'Token': 'Token', 'Elindeki': 'Held',
-  'İzleniyor': 'Watching', 'Yaklaşan açılışlar': 'Upcoming openings', 'Açılış': 'Opens in', 'açıldı': 'opened', 'Bedava faz bekleniyor': 'Free phase pending',
+  'İzleniyor': 'Watching', 'Yaklaşan açılışlar': 'Upcoming openings', 'Açılış': 'Opens in', 'açıldı': 'opened', 'Bedava faz bekleniyor': 'Free phase pending', 'Bu oturumda henüz bildirim yok': 'No notifications this session yet', 'İki faz': 'Two-phase', 'Önce bedava havuz, dolunca ücretli': 'Free pool first, paid once it fills', 'Toplam arzdan tahmin, ücretli mintler de sayılıyor': 'Estimated from total supply, paid mints included', "Kontratın bedava sayacı": "Contract's free counter",
   'Kontratın yazdığı açılış saatinde takip birkaç saniyede bir yeniden kontrol eder. Açılınca otomatik mint kuralların uygulanır.': 'At the opening time written in the contract, the tracker re-checks every few seconds. Once it opens, your auto-mint rules apply.',
   'Kontratın yazdığı açılış saati': 'Opening time written in the contract', 'Ücretli yol açık, bedava yol henüz açılmadı': 'Paid path is open, free path not yet', 'Son kontrol': 'Last check', 'Durum': 'Status', 'Havuz yok': 'No pool', 'Şimdi kontrol et': 'Check now',
   'Mint edilen tokenlerin çoğunda havuz mint bitince ya da proje sahibi açınca kurulur. Fiyatı olmayan tokenler 10 dakikada bir kontrol edilir; fiyat oluştuğu an bildirim gelir. En iyi satış fırsatı genelde ilk dakikalardır.': 'For most minted tokens the pool is created when the mint ends or when the owner opens it. Tokens without a price are checked every 10 minutes and you are notified the moment a price appears. The best selling window is usually the first minutes.',
@@ -303,6 +307,8 @@ const KALIPLAR = [
   [/^Onayını bekliyor: (.+)$/, (m) => `Awaiting your approval: ${m[1]}`],
   [/^Ücretsiz mint: (.+)$/, (m) => `Free mint: ${m[1]}`],
   [/^Neredeyse ücretsiz mint: (.+)$/, (m) => `Nearly free mint: ${m[1]}`],
+  [/^Bedava (~?\S+ \/ \S+)$/, (m) => `Free ${m[1]}`],
+  [/^toplam (\S+ \/ \S+)$/, (m) => `total ${m[1]}`],
   [/^Ücretli token mint: (.+)$/, (m) => `Paid token mint: ${m[1]}`],
   [/^Agent ID mint \(henüz açık değil\): (.+)$/, (m) => `Agent ID mint (not open yet): ${m[1]}`],
   [/^Daha fazla göster \((\d+) kaldı\)$/, (m) => `Show more (${m[1]} left)`],
@@ -338,8 +344,11 @@ function cevirMetin(t) {
   const sade = t.replace(/\s+/g, ' ').trim();
   if (!sade) return null;
   const s = SOZLUK.get(sade);
-  if (s !== undefined) return s;
-  for (const [re, f] of KALIPLAR) { const m = sade.match(re); if (m) return f(m); }
+  if (s !== undefined) return DIL === 'zh' ? ZH.get(s) ?? s : s;
+  for (const [i, [re, f]] of KALIPLAR.entries()) {
+    const m = sade.match(re);
+    if (m) return DIL === 'zh' && KALIP_ZH[i] ? KALIP_ZH[i](m) : f(m);
+  }
   return null;
 }
 
@@ -379,12 +388,12 @@ function seciciKur() {
   g.id = 'dil-secici';
   g.className = 'dil-secici';
   g.setAttribute('role', 'group');
-  g.setAttribute('aria-label', DIL === 'en' ? 'Language' : 'Dil');
+  g.setAttribute('aria-label', DILLER[DIL][2]);
   g.setAttribute('data-cevirme', '');
-  for (const d of ['tr', 'en']) {
+  for (const [d, [ad]] of Object.entries(DILLER)) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.textContent = d.toUpperCase();
+    b.textContent = ad;
     b.setAttribute('aria-pressed', String(d === DIL));
     b.addEventListener('click', () => { if (d !== DIL) dilDegistir(d); });
     g.append(b);
@@ -393,8 +402,8 @@ function seciciKur() {
 }
 
 seciciKur();
-if (DIL === 'en') {
-  document.documentElement.lang = 'en';
+if (DIL !== 'tr') {
+  document.documentElement.lang = DIL === 'zh' ? 'zh-CN' : 'en';
   agacCevir(document.body);
   let bekleyen = new Set();
   let planli = false;

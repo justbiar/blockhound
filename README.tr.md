@@ -15,7 +15,7 @@ Blockhound senin bilgisayarında çalışır ve cüzdanına resmi [Binance Agent
 
 ## Kısa bir tur
 
-Görüntüler gerçek terminalden, canlı zincir verisiyle alındı. Arayüz Türkçe ve İngilizce kullanılabilir (üst çubuktaki TR / EN düğmeleri). Cüzdan bakiyesi ve adresi bulanıklaştırıldı.
+Görüntüler gerçek terminalden, canlı zincir verisiyle alındı. Arayüz Türkçe, İngilizce ve Çince kullanılabilir (üst çubuktaki TR / EN / 中文 düğmeleri). Cüzdan bakiyesi ve adresi bulanıklaştırıldı.
 
 | | |
 | --- | --- |

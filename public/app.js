@@ -1189,10 +1189,18 @@ function mintSatir(r) {
     if (v == null || !Number.isFinite(n)) return '?';
     return n >= 1e12 ? n.toExponential(1) : n >= 1e9 ? `${sayiYaz(n / 1e9, 1)}B` : n >= 1e6 ? `${sayiYaz(n / 1e6, 1)}M` : sayiYaz(n, 0);
   };
-  const ilerleme = r.basilan != null || r.maks != null ? `${esc(adet(r.basilan))} / ${esc(adet(r.maks))}` : '<span class="soluk">?</span>';
+  const toplam = r.basilan != null || r.maks != null ? `${esc(adet(r.basilan))} / ${esc(adet(r.maks))}` : '<span class="soluk">?</span>';
+  // İki fazlı mintte önce bedava havuzun doluluğu gösterilir: havuz bitince aynı mint ücretli olur
+  const h = r.havuz;
+  const yuzde = h ? Math.min(100, Math.round((Number(h.dolan) / Number(h.bedava)) * 100)) : 0;
+  const ilerleme = h ? `<div class="havuz" title="${h.yaklasik ? 'Toplam arzdan tahmin, ücretli mintler de sayılıyor' : 'Kontratın bedava sayacı'}">
+      <span>Bedava ${h.yaklasik ? '~' : ''}${esc(adet(h.dolan))} / ${esc(adet(h.bedava))}</span>
+      <span class="havuz-cubuk${yuzde >= 90 ? ' dolmak' : ''}" data-yuzde="${yuzde}"><i></i></span>
+      <span class="soluk">toplam ${toplam}</span></div>` : toplam;
+  const gorsel = r.gorsel ? `<img class="mint-gorsel" src="${esc(r.gorsel)}" alt="" width="32" height="32" loading="lazy" referrerpolicy="no-referrer">` : '<span class="mint-gorsel bos"></span>';
   const ozet = `<tr data-capa="m-${esc(r.adres)}" class="mint-ozet${acik ? ' acik' : ''}">
-    <td>${rozet}${r.agentId ? ' <span class="mint-rozet agent kucuk">Agent ID</span>' : ''}${zamanRozet(r)}</td>
-    <td>${ad}${r.tur === 'token' ? ' <span class="mint-rozet agent kucuk">Token</span>' : ''}${r.kasa ? ' <span class="mint-rozet ucretsiz kucuk" title="Vergi gelirini kart sahiplerine dağıtan kasa kartı">Kasa</span>' : ''}${kisaNeden}</td>
+    <td>${rozet}${r.agentId ? ' <span class="mint-rozet agent kucuk">Agent ID</span>' : ''}${h ? ' <span class="mint-rozet izle kucuk" title="Önce bedava havuz, dolunca ücretli">İki faz</span>' : ''}${zamanRozet(r)}</td>
+    <td><div class="mint-ad">${gorsel}<div>${ad}${r.tur === 'token' ? ' <span class="mint-rozet agent kucuk">Token</span>' : ''}${r.kasa ? ' <span class="mint-rozet ucretsiz kucuk" title="Vergi gelirini kart sahiplerine dağıtan kasa kartı">Kasa</span>' : ''}${kisaNeden}</div></div></td>
     <td>${ucret}</td>
     <td>${ilerleme}</td>
     <td>${mintAksiyon(r, acik)}</td>
@@ -1619,7 +1627,19 @@ function mintListeCiz() {
     : turdekiler.length ? '<tr><td colspan="5" class="soluk">Bu filtreye uyan mint yok.</td></tr>'
     : mintSon.length ? `<tr><td colspan="5" class="soluk">Henüz ${mintTur === 'token' ? 'token' : 'NFT'} mint'i bulunmadı.</td></tr>`
     : '<tr><td colspan="5" class="soluk">Henüz bir şey bulunmadı. Takip yeni blokları tarıyor, ilk bulgu biraz sürebilir.</td></tr>');
+  havuzCubuklari($('mintler'));
 }
+
+// Havuz çubuklarının genişliği CSP yüzünden satır içi stil yerine buradan verilir
+function havuzCubuklari(kok) {
+  for (const e of kok.querySelectorAll('.havuz-cubuk[data-yuzde] i')) e.style.width = `${e.parentElement.dataset.yuzde}%`;
+}
+// Yüklenemeyen koleksiyon görseli boş kutuya döner (error olayı kabarmaz, yakalama evresinde dinlenir)
+document.addEventListener('error', (e) => {
+  if (e.target instanceof HTMLImageElement && e.target.classList.contains('mint-gorsel')) {
+    const bos = document.createElement('span'); bos.className = 'mint-gorsel bos'; e.target.replaceWith(bos);
+  }
+}, true);
 
 document.querySelector(`#mint-tur input[value="${mintTur}"]`).checked = true;
 $('mint-tur').addEventListener('change', (e) => { mintTur = e.target.value; depoYaz('mint-tur', mintTur); mintGoster = 30; mintListeCiz(); });
@@ -1654,6 +1674,7 @@ $('mint-kontrol-form').addEventListener('submit', async (e) => {
     acikMintler.add(String(r.adres).toLowerCase());
     k.innerHTML = `<div class="tablo-kap"><table><thead><tr><th>Durum</th><th>Koleksiyon</th><th>Ücret</th><th>Basılan</th><th></th></tr></thead><tbody>${mintSatir(r)}</tbody></table></div>`
       + (r.sahip ? `<p class="not">Kontrat sahibi: <span class="adres">${esc(r.sahip)}</span></p>` : '');
+    havuzCubuklari(k);
   } catch (err) { k.innerHTML = `<span class="hata">${esc(err.message)}</span>`; }
   finally { $('mint-kontrol-btn').disabled = false; }
 });

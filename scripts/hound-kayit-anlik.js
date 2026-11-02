@@ -6,6 +6,7 @@ const KONTRAT = { hound: '0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac', blockhoun
 const d = JSON.parse(readFileSync(new URL('../data/hound-takip.json', import.meta.url)));
 const olaylar = d.mintler.map((m) => ({
   k: KONTRAT[m.tur].toLowerCase(), m: m.madenci.toLowerCase(), i: m.sira, bit: m.bit, ucret: m.ucretWei, b: m.blok, tx: m.tx,
+  t: d.blokZaman?.[m.blok] ?? null,
 }));
 const adlar = Object.fromEntries(Object.entries(d.adlar || {}).map(([a, ad]) => [a.toLowerCase(), ad]));
 const cikti = { son: d.sonBlok, olaylar, adlar, zaman: Date.now() };

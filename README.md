@@ -12,7 +12,7 @@ Blockhound runs on your own computer and talks to your wallet through the offici
 [Binance Agentic Wallet](https://www.binance.com/) CLI (`baw`). Your private key never touches this program: every signature happens
 on Binance's side, and the server only listens on `127.0.0.1`.
 
-The interface is available in English and Turkish (switch with the TR / EN buttons in the top bar). The source code is in Turkish; issues and pull requests in English are welcome.
+The interface is available in English, Turkish and Chinese (switch with the TR / EN / 中文 buttons in the top bar). The source code is in Turkish; issues and pull requests in English are welcome.
 
 <p align="center"><img src="site/img/en/mintler.jpg" width="900" alt="Blockhound Mints screen: new mint contracts with status badges and Mint buttons"></p>
 

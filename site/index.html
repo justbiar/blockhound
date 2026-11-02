@@ -30,6 +30,7 @@
       <a href="#sss" data-i18n="m_sss">常见问题</a>
       <a href="https://github.com/justbiar/blockhound" class="gh" rel="noopener">GitHub</a>
     </nav>
+    <a class="dugme ana kucuk ust-mint" href="#mint" data-i18n="u_cta1">开始 mint</a>
     <div class="dil" role="group" aria-label="Dil / Language">
       <button type="button" data-dil="zh" aria-pressed="true">中文</button>
       <button type="button" data-dil="en" aria-pressed="false">EN</button>
@@ -48,6 +49,10 @@
           <a class="dugme" href="#nasil" data-i18n="u_cta2">工作原理</a>
         </div>
         <p class="zincir-satir" data-i18n="u_zincir">BNB Smart Chain · 凭 Agent ID 解锁 · 合约无所有者</p>
+        <div class="cipler">
+          <span class="cip"><b>HOUND</b><a href="https://bscscan.com/address/0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac" rel="noopener">0x8446…41Ac ↗</a><button type="button" data-kopyala="0x8446C862f84B948fDDAf1Be42c6B59ceCf5941Ac" data-i18n="c_kopyala">复制</button></span>
+          <span class="cip"><b>BlockHound</b><a href="https://bscscan.com/address/0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd" rel="noopener">0x2535…e3Dd ↗</a><button type="button" data-kopyala="0x2535E83109909c7B9eA22D5b2f7c8621E595e3Dd" data-i18n="c_kopyala">复制</button></span>
+        </div>
       </div>
       <form class="ajan-form ajan-kutu" id="ajan-form">
         <p class="kutu-adim" data-i18n="a_adim">第 1 步 · 选择代理</p>
@@ -57,9 +62,24 @@
           <button type="submit" class="dugme ana" data-i18n="a_bul">查找代理</button>
         </div>
         <p id="ajan-durum" class="kucuk-yazi" role="status" aria-live="polite"></p>
+        <div id="ajan-kart" class="ajan-kart" hidden>
+          <dl>
+            <div><dt data-i18n="ak_bnb">BNB 余额</dt><dd data-ak="bnb">—</dd></div>
+            <div><dt>HOUND</dt><dd data-ak="hound">—</dd></div>
+            <div><dt>BlockHound</dt><dd data-ak="nft">—</dd></div>
+          </dl>
+          <p class="ajan-hazir" data-ak="hazir"></p>
+        </div>
         <div id="durum-yayin" class="bilgi-serit" role="status"></div>
       </form>
     </section>
+
+    <dl class="canli-ozet" aria-label="Canlı">
+      <div class="vurgu"><dt data-i18n="co_toplam">总 mint 次数</dt><dd data-ky="toplam">—</dd><p data-ky="dagilim"></p></div>
+      <div><dt data-i18n="co_madenci">矿工（Agent ID）</dt><dd data-ky="madenci">—</dd><p data-i18n="co_madenci_a">只有 Agent ID 钱包</p></div>
+      <div><dt data-i18n="co_ucret">进入金库</dt><dd><span data-ky="ucret-sayi">—</span> <span class="birim">BNB</span></dd><p data-i18n="co_ucret_a">100% 的 mint 费用</p></div>
+      <div><dt data-i18n="co_zorluk">当前难度</dt><dd data-canli="zorluk">—</dd><p data-canli="zorluk-alt"></p></div>
+    </dl>
 
     <section id="mint" class="mint-alan" aria-label="Mint">
       <p class="kutu-adim" data-i18n="a_adim2">第 2 步 · 计算哈希并用代理钱包发送</p>
@@ -70,13 +90,21 @@
             <h2 data-i18n="hk_baslik">10,000 HOUND</h2>
             <p class="kucuk-yazi" data-i18n="hk_alt">ERC-20 · 每个解固定奖励 · 每 1,000 次 mint 难度 +1 位</p>
           </header>
+          <div class="token-onizleme" aria-hidden="true"><img src="logo.svg" alt="" width="72" height="72"><b>10,000</b><span>HOUND</span></div>
+          <div class="fiyat">
+            <p class="fiyat-ust" data-i18n="f_fiyat">每次 mint 价格</p>
+            <p class="fiyat-bnb"><span data-alan="fiyat-bnb">—</span> <span class="birim">BNB</span></p>
+            <p class="kucuk-yazi"><span data-alan="fiyat-usd">≈ 0.50 $</span> · <span data-i18n="f_alirsin">你将获得</span> <b>10,000 HOUND</b></p>
+          </div>
           <dl class="olcu">
-            <div><dt data-i18n="o_ucret">费用</dt><dd data-alan="ucret">0.50 $</dd></div>
             <div><dt data-i18n="o_zorluk">难度</dt><dd data-alan="zorluk">—</dd></div>
             <div><dt data-i18n="o_basilan">已铸造</dt><dd data-alan="basilan">—</dd></div>
             <div><dt data-i18n="o_kalan">距下次加难</dt><dd data-alan="kalan">—</dd></div>
           </dl>
-          <div class="ilerleme" aria-hidden="true"><span data-alan="donem-cubuk"></span></div>
+          <div class="donem">
+            <p class="donem-yazi"><span data-alan="donem-yazi">—</span><span data-alan="donem-yuzde"></span></p>
+            <div class="ilerleme" aria-hidden="true"><span data-alan="donem-cubuk"></span></div>
+          </div>
           <div class="madenci">
             <p class="kucuk-yazi" data-alan="tahmin"></p>
             <div class="dugmeler">
@@ -99,13 +127,20 @@
             <p class="kucuk-yazi" data-i18n="nk_alt">ERC-721 · 图像完全上链，由你的哈希生成 · 每 250 次 mint 难度 +1 位</p>
           </header>
           <div class="nft-onizleme" data-alan="onizleme" role="img" aria-label="BlockHound 示例图像"></div>
+          <div class="fiyat">
+            <p class="fiyat-ust" data-i18n="f_fiyat">每次 mint 价格</p>
+            <p class="fiyat-bnb"><span data-alan="fiyat-bnb">—</span> <span class="birim">BNB</span></p>
+            <p class="kucuk-yazi"><span data-alan="fiyat-usd">≈ 0.10 $</span> · <span data-i18n="f_alirsin">你将获得</span> <b>1 NFT</b></p>
+          </div>
           <dl class="olcu">
-            <div><dt data-i18n="o_ucret">费用</dt><dd data-alan="ucret">0.10 $</dd></div>
             <div><dt data-i18n="o_zorluk">难度</dt><dd data-alan="zorluk">—</dd></div>
             <div><dt data-i18n="o_basilan">已铸造</dt><dd data-alan="basilan">—</dd></div>
             <div><dt data-i18n="o_kalan">距下次加难</dt><dd data-alan="kalan">—</dd></div>
           </dl>
-          <div class="ilerleme" aria-hidden="true"><span data-alan="donem-cubuk"></span></div>
+          <div class="donem">
+            <p class="donem-yazi"><span data-alan="donem-yazi">—</span><span data-alan="donem-yuzde"></span></p>
+            <div class="ilerleme" aria-hidden="true"><span data-alan="donem-cubuk"></span></div>
+          </div>
           <div class="madenci">
             <p class="kucuk-yazi" data-alan="tahmin"></p>
             <div class="dugmeler">
@@ -179,12 +214,18 @@
       <p class="ust-yazi" data-i18n="ky_ust">链上数据</p>
       <h2 data-i18n="ky_baslik">每一次 mint 都公开可查。</h2>
       <p class="alt" data-i18n="ky_alt">以下数据直接从合约的 Mined 事件读取，不经过任何服务器。每一行都可以在 BscScan 上核对。</p>
-      <dl class="kayit-ozet" id="kayit-ozet">
-        <div><dt data-i18n="ky_toplam">总 mint 次数</dt><dd data-ky="toplam">—</dd></div>
-        <div><dt data-i18n="ky_madenci">矿工（Agent ID）</dt><dd data-ky="madenci">—</dd></div>
-        <div><dt data-i18n="ky_ucret">累计费用</dt><dd data-ky="ucret">—</dd></div>
-        <div><dt data-i18n="ky_blok">最新区块</dt><dd data-ky="blok">—</dd></div>
-      </dl>
+      <div class="grafik-ust">
+        <h3 class="grafik-baslik" data-i18n="ak_baslik">累计 mint 次数</h3>
+        <ul class="lejant" aria-label="Seriler">
+          <li><span class="lejant-isaret" style="--renk: var(--seri-1)"></span>HOUND</li>
+          <li><span class="lejant-isaret kesik" style="--renk: var(--seri-2)"></span>BlockHound</li>
+        </ul>
+      </div>
+      <figure class="grafik">
+        <div id="aktivite-grafik" class="grafik-alan"></div>
+        <div id="aktivite-ipucu" class="ipucu" role="status" hidden></div>
+        <figcaption class="kucuk-yazi"><span data-i18n="ak_not">每一级台阶是一次 mint，时间取自区块。</span> <span data-i18n="ky_blok">最新区块</span> <span data-ky="blok">—</span></figcaption>
+      </figure>
       <div class="kayit-ust">
         <div class="sekme" role="group" aria-label="Kayıt">
           <button type="button" data-kayit="son" aria-pressed="true" data-i18n="ky_son">最近 mint</button>

@@ -30,6 +30,18 @@ export const SARTLI_IMZALAR = [
 const FIYAT_IMZALARI = ['price()', 'mintPrice()', 'MINT_PRICE()', 'PRICE()', 'cost()', 'publicPrice()', 'mintFee()', 'fee()'];
 const BASILAN_IMZALARI = ['totalSupply()', 'totalMinted()'];
 const MAKS_IMZALARI = ['maxSupply()', 'MAX_SUPPLY()', 'maxTokens()', 'MAX_TOKENS()', 'collectionSize()'];
+// İki fazlı mintlerde (önce bedava havuz, sonra ücretli) bedava kısmın büyüklüğü
+const BEDAVA_ARZ_IMZALARI = ['FREE_SUPPLY()', 'freeSupply()', 'MAX_FREE()', 'maxFree()', 'maxFreeSupply()', 'MAX_FREE_SUPPLY()',
+  'FREE_MINTS()', 'freeMintSupply()', 'MAX_FREE_MINTS()'];
+// Bedava havuzdan basılan ve kalan: totalSupply ücretli mintleri de sayar, ayrı sayaç varsa o kullanılır
+const BEDAVA_BASILAN_IMZALARI = ['freeMinted()', 'freeClaimed()', 'totalFreeMinted()', 'freeMintedCount()', 'freeMintCount()',
+  'mintedFree()', 'freeUsed()', 'totalFreeClaimed()'];
+const BEDAVA_KALAN_IMZALARI = ['freeRemaining()', 'remainingFree()', 'freeLeft()'];
+// Koleksiyon görseli: metadata önce zincirden (data:), sonra IPFS ağ geçidinden ya da https'ten okunur
+const GORSEL_GECIT = 'https://ipfs.io/ipfs/';
+const GORSEL_DATA_MAX = 80_000; // kayıt dosyası şişmesin: daha büyük gömülü görseller alınmaz
+const CUZDAN_YOK = 'Cüzdan bağlı değil, takip bekliyor';
+const GORSEL_YENIDEN_MS = 60 * 6e4; // görseli olmayan koleksiyon bu kadar sonra yeniden denenir (metadata sonradan yüklenebilir)
 
 // Bu tutar ve altı "neredeyse ücretsiz" sayılır. Fiyatı okunamayan kontratlar için küçük ücret basamakları denenir
 export const UCUZ_WEI = parseEther('0.001');
@@ -88,6 +100,43 @@ const bedavaGecti = (r) => (r.mintler || []).some((m) => m.gecti && m.ucretWei =
 
 const temizle = (s, n = 40) => String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, n);
 
+// Görsel adresi panelde <img> olarak gösterilir: sadece gömülü resim, https ya da IPFS kabul edilir
+const GORSEL_DATA = /^data:image\/(png|jpeg|jpg|gif|webp|svg\+xml)[;,]/i;
+const ipfs = (u) => (u.startsWith('ipfs://') ? GORSEL_GECIT + u.slice(7).replace(/^ipfs\//, '') : u);
+function gorselAdresi(u) {
+  u = ipfs(String(u || '').trim());
+  if (GORSEL_DATA.test(u)) return u.length <= GORSEL_DATA_MAX ? u : null;
+  try { return new URL(u).protocol === 'https:' && u.length <= 2_000 ? u : null; } catch { return null; }
+}
+// Metadata sunucusu kontrat sahibinin elinde: yerel ağ adreslerine istek atılmaz, yönlendirme izlenmez, boyut ve süre sınırlıdır
+const YEREL_HOST = /^(localhost|.*\.local|.*\.internal|\[.*\]|\d+\.\d+\.\d+\.\d+)$/i;
+async function metadataOku(u, fetchFn) {
+  if (u.startsWith('data:')) {
+    const virgul = u.indexOf(',');
+    const govde = u.slice(virgul + 1);
+    return JSON.parse(/;base64$/i.test(u.slice(0, virgul)) ? Buffer.from(govde, 'base64').toString('utf8') : decodeURIComponent(govde));
+  }
+  const url = new URL(ipfs(u));
+  if (url.protocol !== 'https:' || YEREL_HOST.test(url.hostname)) return null;
+  const yanit = await fetchFn(url, { redirect: 'error', signal: AbortSignal.timeout(5_000) });
+  if (!yanit.ok || Number(yanit.headers.get('content-length') || 0) > 300_000) return null;
+  const tur = yanit.headers.get('content-type') || '';
+  if (tur.startsWith('image/')) return { image: url.href };
+  const metin = await yanit.text();
+  return metin.length > 300_000 ? null : JSON.parse(metin);
+}
+export async function gorselCoz(uri, fetchFn = globalThis.fetch) {
+  if (!uri) return null;
+  const dogrudan = gorselAdresi(uri);
+  if (dogrudan && (dogrudan.startsWith('data:image') || /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(dogrudan))) return dogrudan;
+  const m = await metadataOku(uri, fetchFn).catch(() => null);
+  if (!m || typeof m !== 'object') return null;
+  if (typeof m.image_data === 'string' && m.image_data.trim().startsWith('<svg')) {
+    return gorselAdresi('data:image/svg+xml;base64,' + Buffer.from(m.image_data).toString('base64'));
+  }
+  return gorselAdresi(m.image || m.image_url || m.imageUrl || '');
+}
+
 export function kodla(imza, cuzdan) {
   const turler = imza.slice(imza.indexOf('(') + 1, -1).split(',').filter(Boolean);
   const iface = new Interface([`function ${imza}`]);
@@ -145,6 +194,8 @@ export class MintTakip extends EventEmitter {
     this.agentIdSon = null;
     // Yardımcı kontratların kodunda kayıt adresi var mı: adres -> bool
     this.kayitliKod = new Map();
+    // Koleksiyon görselleri: adres -> görsel adresi ya da { zaman } (bulunamadı)
+    this.gorselOnbellek = new Map();
     // Olaylardan gelen adayların tekrar tekrar incelenmemesi için
     this.gorulen = new Set();
     this.durum = { calisiyor: false, sonBlok: null, taranan: 0, kontrat: 0, sonHata: null, cuzdan: null, baslangic: null };
@@ -434,11 +485,19 @@ export class MintTakip extends EventEmitter {
       if (ilk) r.mintler.push(ilk);
     }
 
-    const [ad, sembol, basilan, maks, sahip, bendeki] = await Promise.all([
+    const [ad, sembol, basilan, maks, sahip, bendeki, bedavaArz, bedavaBasilan, bedavaKalan] = await Promise.all([
       this.metinOku(adres, 'name()'), this.metinOku(adres, 'symbol()'),
       this.ilkDeger(adres, kod, BASILAN_IMZALARI), this.ilkDeger(adres, kod, MAKS_IMZALARI), this.cagir(adres, 'owner()'),
       r.standart === 'ERC-721' ? this.bakiyeOku(adres, cuzdan) : Promise.resolve(null),
+      this.ilkDeger(adres, kod, BEDAVA_ARZ_IMZALARI), this.ilkDeger(adres, kod, BEDAVA_BASILAN_IMZALARI), this.ilkDeger(adres, kod, BEDAVA_KALAN_IMZALARI),
     ]);
+    // Bedava havuz toplam arzdan küçükse mint iki fazlıdır: havuz dolunca aynı mint ücretli olur.
+    // Ayrı sayaç yoksa doluluk toplam arzdan tahmin edilir (ücretli mintler de sayıldığı için yaklaşık)
+    if (bedavaArz > 0n && (maks === null || bedavaArz < maks)) {
+      const enKucuk = (a, b) => (a < b ? a : b);
+      const dolan = bedavaBasilan !== null ? bedavaBasilan : bedavaKalan !== null && bedavaKalan <= bedavaArz ? bedavaArz - bedavaKalan : basilan;
+      if (dolan !== null) r.havuz = { bedava: bedavaArz.toString(), dolan: enKucuk(dolan, bedavaArz).toString(), yaklasik: bedavaBasilan === null && bedavaKalan === null };
+    }
     // Cüzdanda bu koleksiyondan kaç tane var: siteden ya da başka yoldan yapılan mintler de görünür
     r.bendeki = bendeki;
     Object.assign(r, {
@@ -462,7 +521,31 @@ export class MintTakip extends EventEmitter {
     // Agent ID kayıt adresini anan NFT olmayan kontratlar genelde lansman ya da yardımcı kontratlardır, mint değil
     if (!r.standart && !gecen.length && !r.isKaniti) r.sonuc = 'AGENT-ID-DIGER';
     if (r.isKaniti && !gecen.length) r.sonuc = 'IZLE';
+    if (r.standart && IZLENEN.has(r.sonuc)) r.gorsel = await this.gorselOku(adres, kod, r.standart);
     return r;
+  }
+
+  // Koleksiyonun ilk tokeninin görseli. Sonuç adres başına önbelleğe alınır; bulunamazsa bir saat sonra yeniden denenir.
+  // Metadata dış veridir: sadece görsel adresi alınır, o da data:image, https ya da IPFS olmalıdır
+  async gorselOku(adres, kod, standart) {
+    const k = adres.toLowerCase();
+    const eski = this.gorselOnbellek.get(k) ?? this.bulunanlar.find((x) => String(x.adres).toLowerCase() === k)?.gorsel;
+    if (typeof eski === 'string') return eski;
+    if (eski && Date.now() - eski.zaman < GORSEL_YENIDEN_MS) return null;
+    let gorsel = null;
+    const denemeler = standart === 'ERC-1155' ? [['uri(uint256)', 1n], ['uri(uint256)', 0n]] : [['tokenURI(uint256)', 1n], ['tokenURI(uint256)', 0n]];
+    if (seciciVar(kod, 'contractURI()')) denemeler.push(['contractURI()', null]);
+    for (const [imza, arg] of denemeler) {
+      try {
+        const iface = new Interface([`function ${imza} view returns (string)`]);
+        const fn = imza.slice(0, imza.indexOf('('));
+        const uri = iface.decodeFunctionResult(fn, await this.provider.call({ to: adres, data: iface.encodeFunctionData(fn, arg === null ? [] : [arg]) }))[0];
+        gorsel = await gorselCoz(String(uri).replace('{id}', (arg ?? 0n).toString(16).padStart(64, '0')), this.fetchFn);
+      } catch { /* bu token yok ya da metadata okunamadı */ }
+      if (gorsel) break;
+    }
+    this.gorselOnbellek.set(k, gorsel || { zaman: Date.now() });
+    return gorsel;
   }
 
   kayitEkle(r) {
@@ -716,7 +799,9 @@ export class MintTakip extends EventEmitter {
   }
 
   async tur() {
-    if (!(await this.cuzdan())) { this.durum.sonHata = 'Cüzdan bağlı değil, takip bekliyor'; return; }
+    if (!(await this.cuzdan())) { this.durum.sonHata = CUZDAN_YOK; return; }
+    // Cüzdan bağlanınca ilk tur aradaki blokları tararken uzun sürebilir: eski uyarı turun sonunu beklemeden kalkar
+    if (this.durum.sonHata === CUZDAN_YOK) this.durum.sonHata = null;
     const tepe = await this.provider.getBlockNumber();
     let bas = (this.durum.sonBlok ?? tepe - 1) + 1;
     if (tepe - bas > this.maxGeriBlok) {

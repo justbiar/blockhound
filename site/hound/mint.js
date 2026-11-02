@@ -53,6 +53,9 @@ const EN = {
   b_alt: 'If you run an auto-mint system with an Agent ID it can mint HOUND too: the only rule is finding the solution. GPU, bot or command line, the rules are the same for everyone.',
   b_not: 'The command-line miner in the repository finds a solution and prints the baw commands to send; it never touches a key:',
   f_m: 'An independent, open-source (MIT) project with no affiliation to Binance, OKX or any other organization. Nothing here is investment advice.',
+  c_kopyala: 'Copy', ak_bnb: 'BNB balance', f_fiyat: 'Price per mint', f_alirsin: 'you get',
+  co_toplam: 'Total mints', co_madenci: 'Miners (Agent ID)', co_madenci_a: 'Agent ID wallets only', co_ucret: 'To the treasury', co_ucret_a: '100% of mint fees',
+  co_zorluk: 'Current difficulty', ak_baslik: 'Cumulative mints', ak_not: 'Each step is one mint, timed by its block.',
 };
 const M = {
   zh: {
@@ -70,6 +73,9 @@ const M = {
     hata: (m) => `错误：${m}`,
     sn: (n) => n < 1 ? '不到 1 秒' : n < 90 ? `${Math.round(n)} 秒` : n < 5400 ? `${Math.round(n / 60)} 分钟` : n < 172800 ? `${Math.round(n / 3600)} 小时` : `${Math.round(n / 86400)} 天`,
     bit: (b) => `${b} 位`, mint: (n) => `${n} 次 mint`,
+    donem: (e, a, b) => `第 ${e} 周期 · ${a} / ${b}`, zorlukAlt: 'HOUND · BlockHound',
+    hazir: (b) => `可以 mint：余额足够支付费用和 gas（每次约 ${b} BNB）。`,
+    yetersiz: (b) => `余额不足：每次 mint 需要约 ${b} BNB（费用加 gas）。请先向代理钱包转入 BNB。`,
   },
   en: {
     yayinYok: 'The contracts are not live yet. For now you can try test mining to see your computer\'s speed; the hash found is not sent anywhere.',
@@ -86,6 +92,9 @@ const M = {
     hata: (m) => `Error: ${m}`,
     sn: (n) => n < 1 ? 'under a second' : n < 1.5 ? 'about a second' : n < 90 ? `${Math.round(n)} seconds` : n < 5400 ? `${Math.round(n / 60)} minutes` : n < 172800 ? `${Math.round(n / 3600)} hours` : `${Math.round(n / 86400)} days`,
     bit: (b) => `${b} bits`, mint: (n) => `${n} mints`,
+    donem: (e, a, b) => `Epoch ${e} · ${a} / ${b}`, zorlukAlt: 'HOUND · BlockHound',
+    hazir: (b) => `Ready to mint: the balance covers the fee and gas (about ${b} BNB per mint).`,
+    yetersiz: (b) => `Not enough BNB: a mint needs about ${b} BNB (fee plus gas). Send BNB to the agent wallet first.`,
   },
 };
 
@@ -177,14 +186,59 @@ async function guncelle(k) {
   try {
     const [ch, bits, fee, basilan, donem] = await okuHepsi(k.adres, ['challenge', 'difficultyBits', 'mintFee', 'minted', 'epochSize'].map((f) => SEC[f]));
     k.challenge = ch; k.bits = Number(BigInt(bits)); k.ucretWei = BigInt(fee); k.basilan = Number(BigInt(basilan)); k.donem = Number(BigInt(donem));
-    k.alan('ucret').textContent = `${k.ucretUsd.toFixed(2)} $ · ${(Number(k.ucretWei) / 1e18).toFixed(5)} BNB`;
-    k.alan('zorluk').textContent = t().bit(k.bits);
-    k.alan('basilan').textContent = sayi(k.basilan);
-    k.alan('kalan').textContent = t().mint(sayi(k.donem - (k.basilan % k.donem)));
-    k.alan('donem-cubuk').style.transform = `scaleX(${(k.basilan % k.donem) / k.donem})`;
+    k.alan('fiyat-bnb').textContent = (Number(k.ucretWei) / 1e18).toFixed(6);
+    k.alan('fiyat-usd').textContent = `≈ ${k.ucretUsd.toFixed(2)} $`;
+    sayilariYaz(k);
+    zorlukOzet();
+    if (ajan) cuzdanKontrol(ajan);
     document.dispatchEvent(new CustomEvent('hound:basilan', { detail: { tur: k.tur, basilan: k.basilan } }));
     tahminYaz(k);
   } catch (e) { k.durumYaz(t().hata(e.message)); }
+}
+
+// Dile bağlı sayılar: dil değişince de yeniden yazılır
+function sayilariYaz(k) {
+  if (k.bits == null) return;
+  k.alan('zorluk').textContent = t().bit(k.bits);
+  if (k.basilan == null) return;
+  const icinde = k.basilan % k.donem;
+  k.alan('basilan').textContent = sayi(k.basilan);
+  k.alan('kalan').textContent = t().mint(sayi(k.donem - icinde));
+  k.alan('donem-yazi').textContent = t().donem(Math.floor(k.basilan / k.donem), sayi(icinde), sayi(k.donem));
+  k.alan('donem-yuzde').textContent = `${((icinde / k.donem) * 100).toFixed(1)}%`;
+  k.alan('donem-cubuk').style.transform = `scaleX(${icinde / k.donem})`;
+}
+
+// Üstteki canlı kart: iki koleksiyonun şu anki zorluğu
+function zorlukOzet() {
+  const [h, n] = [KART.hound.bits, KART.blockhound.bits];
+  if (h == null && n == null) return;
+  $('[data-canli=zorluk]').textContent = h === n ? t().bit(h) : `${h ?? '?'} / ${t().bit(n ?? '?')}`;
+  $('[data-canli=zorluk-alt]').textContent = t().zorlukAlt;
+}
+
+// Ajan cüzdanı kontrolü: yalnızca okur. Bakiye, HOUND ve NFT sayısı ve bir mint için yeterli BNB olup olmadığı
+const GAZ_PAYI = 100_000_000_000_000n; // 0.0001 BNB: BSC'de bir mint'in gas'ı bunun çok altında
+async function cuzdanKontrol(r) {
+  const kart = $('#ajan-kart');
+  try {
+    const bakiye = (to) => ['eth_call', [{ to, data: KAYIT.balanceOf + adres32(r.adres) }, 'latest']];
+    const [bnb, hb, nb] = (await topluCagri([['eth_getBalance', [r.adres, 'latest']], bakiye(AG.hound), bakiye(AG.blockhound)])).map((x) => BigInt(x));
+    if (ajan !== r) return;
+    const bnbYaz = (w, k = 5) => (Number(w) / 1e18).toFixed(k);
+    $('[data-ak=bnb]', kart).textContent = bnbYaz(bnb);
+    $('[data-ak=hound]', kart).textContent = sayi(Math.floor(Number(hb / 10n ** 18n)));
+    $('[data-ak=nft]', kart).textContent = sayi(Number(nb));
+    // En pahalı mint (HOUND) üzerinden: ücret %5 payla gönderilir, üstüne gas
+    const ucretler = Object.values(KART).map((k) => k.ucretWei).filter(Boolean);
+    const hazir = $('[data-ak=hazir]', kart);
+    if (ucretler.length) {
+      const gerek = (ucretler.reduce((a, b) => (a > b ? a : b)) * 105n) / 100n + GAZ_PAYI;
+      hazir.textContent = bnb >= gerek ? t().hazir(bnbYaz(gerek)) : t().yetersiz(bnbYaz(gerek));
+      hazir.className = `ajan-hazir ${bnb >= gerek ? 'iyi' : 'kotu'}`;
+    }
+    kart.hidden = false;
+  } catch { /* kontrol olmadan da hash aranabilir */ }
 }
 
 function tahminYaz(k) {
@@ -269,6 +323,7 @@ $('#ajan-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const durum = $('#ajan-durum');
   durum.textContent = t().ajanBekle;
+  $('#ajan-kart').hidden = true;
   for (const k of Object.values(KART)) { durdur(k); k.alan('komut').hidden = true; }
   try {
     const r = await ajanCoz($('#ajan').value);
@@ -277,6 +332,7 @@ $('#ajan-form').addEventListener('submit', async (e) => {
     ajan = r;
     const kisa = `${r.adres.slice(0, 6)}…${r.adres.slice(-4)}`;
     durum.textContent = r.ad ? t().ajanBulundu(r.ad, kisa) : t().ajanAdres(kisa);
+    cuzdanKontrol(r);
   } catch (err) {
     ajan = null;
     durum.textContent = err.message === 'gecersiz' ? t().ajanGecersiz : t().hata(err.message);
@@ -304,6 +360,6 @@ try { localStorage.removeItem('ajan'); } catch { /* önemli değil */ }
 KART.blockhound.alan('onizleme').innerHTML = nftSvg(rastgeleSeed(), '#?');
 dilUygula(dil);
 for (const k of Object.values(KART)) guncelle(k);
-for (const b of $$('[data-dil]')) b.addEventListener('click', () => { for (const k of Object.values(KART)) if (k.bits != null) { k.alan('zorluk').textContent = t().bit(k.bits); if (k.basilan != null) { k.alan('basilan').textContent = sayi(k.basilan); k.alan('kalan').textContent = t().mint(sayi(k.donem - (k.basilan % k.donem))); } tahminYaz(k); } });
+for (const b of $$('[data-dil]')) b.addEventListener('click', () => { for (const k of Object.values(KART)) { sayilariYaz(k); tahminYaz(k); } zorlukOzet(); if (ajan) cuzdanKontrol(ajan); });
 setInterval(hizYaz, 1000);
 if (yayinda) setInterval(() => { for (const k of Object.values(KART)) if (!k.isciler.length) guncelle(k); }, 30_000);

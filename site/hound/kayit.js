@@ -1,6 +1,7 @@
 // Mint kaydı: iki kontratın Mined olayları doğrudan herkese açık RPC'den okunur, sunucu yoktur.
 // Taranan blok aralığı ve olaylar tarayıcıda saklanır; sonraki ziyarette yalnızca yeni bloklar okunur.
 import { AG } from './adresler.js';
+import { aktiviteCiz } from './aktivite.js';
 
 const KURULUM = 130898309; // iki kontratın yayınlandığı blok
 const MINED = '0xb641e07763e6dadc2d8c70f7c5da177ddbfcef39e0ecb06e7657162b314ba215';
@@ -14,11 +15,13 @@ const M = {
     son: ['#', '矿工', '系列', '难度', '区块', '交易'], lider: ['排名', '矿工', 'HOUND', 'BlockHound', '合计'],
     bos: '还没有 mint 记录。第一个就是你。', okunuyor: (a, b) => `正在读取链上事件… ${a} / ${b} 个区块`,
     hata: '暂时无法读取 RPC，请稍后刷新。', guncel: (z) => `更新于 ${z}`, bit: (b) => `${b} 位`,
+    dagilim: (h, n) => `HOUND ${h} · BlockHound ${n}`,
   },
   en: {
     son: ['#', 'Miner', 'Collection', 'Difficulty', 'Block', 'Tx'], lider: ['Rank', 'Miner', 'HOUND', 'BlockHound', 'Total'],
     bos: 'No mints yet. The first one could be yours.', okunuyor: (a, b) => `Reading chain events… ${a} / ${b} blocks`,
     hata: 'Could not reach the RPC right now; refresh in a moment.', guncel: (z) => `Updated ${z}`, bit: (b) => `${b} bits`,
+    dagilim: (h, n) => `HOUND ${h} · BlockHound ${n}`,
   },
 };
 const $ = (s) => document.querySelector(s);
@@ -58,6 +61,9 @@ async function anlikYukle() {
   try {
     const a = await (await fetch(new URL('./kayit.json', import.meta.url), { cache: 'no-store' })).json();
     if (a.son > durum.son) durum = { ...a, adlar: { ...durum.adlar, ...a.adlar } };
+    // Eski sürümün sakladığı olaylarda zaman yoktu: anlık görüntüdekinden tamamlanır
+    const zaman = Object.fromEntries(a.olaylar.filter((o) => o.t).map((o) => [o.tx, o.t]));
+    for (const o of durum.olaylar) if (!o.t && zaman[o.tx]) o.t = zaman[o.tx];
   } catch { /* yoksa baştan taranır */ }
 }
 let gorunum = 'son';
@@ -92,8 +98,20 @@ async function tara() {
     await bekle(250); // herkese açık RPC'yi zorlamamak için
   }
   durum.zaman = Date.now();
+  await zamanlariOku();
   await adlariOku();
   depo.yaz(durum);
+}
+
+// Grafik için her mintin zamanı: bloğun zaman damgası (anlık görüntüdekiler hazır gelir)
+async function zamanlariOku() {
+  const eksik = [...new Set(durum.olaylar.filter((o) => !o.t).map((o) => o.b))].slice(0, 50);
+  if (!eksik.length) return;
+  try {
+    const bloklar = await rpc(eksik.map((b) => ['eth_getBlockByNumber', [hex(b), false]]));
+    const zaman = Object.fromEntries(eksik.map((b, i) => [b, bloklar[i] ? Number(BigInt(bloklar[i].timestamp)) * 1000 : null]));
+    for (const o of durum.olaylar) if (!o.t && zaman[o.b]) o.t = zaman[o.b];
+  } catch { /* zamansız olaylar grafikte görünmez, tabloda görünür */ }
 }
 
 // Agent ID adları (handleOf) tek toplu istekte okunur; ABI string çözümü: ofset, uzunluk, veri
@@ -132,10 +150,15 @@ function ciz() {
     madenciler.set(o.m, s);
     ucret += BigInt(o.ucret);
   }
-  $('[data-ky=toplam]').textContent = sayi(olaylar.length);
-  $('[data-ky=madenci]').textContent = sayi(madenciler.size);
-  $('[data-ky=ucret]').textContent = `${sayi(Number(ucret) / 1e18, 5)} BNB`;
-  $('[data-ky=blok]').textContent = durum.son >= KURULUM ? sayi(durum.son) : '—';
+  const yaz = (ad, metin) => { for (const e of document.querySelectorAll(`[data-ky=${ad}]`)) e.textContent = metin; };
+  yaz('toplam', sayi(olaylar.length));
+  yaz('dagilim', t().dagilim(sayi(olaylar.filter((o) => AD[o.k] === 'HOUND').length), sayi(olaylar.filter((o) => AD[o.k] === 'BlockHound').length)));
+  yaz('madenci', sayi(madenciler.size));
+  yaz('ucret', `${sayi(Number(ucret) / 1e18, 5)} BNB`);
+  yaz('ucret-sayi', sayi(Number(ucret) / 1e18, 5));
+  yaz('blok', durum.son >= KURULUM ? sayi(durum.son) : '—');
+  const kap = $('#aktivite-grafik');
+  if (kap) aktiviteCiz(kap, $('#aktivite-ipucu'), olaylar.map((o) => ({ ad: AD[o.k], t: o.t })), { yerel: dil() === 'en' ? 'en-GB' : 'zh-CN' });
 
   const basliklar = t()[gorunum];
   const thead = document.createElement('thead');
@@ -184,6 +207,10 @@ $('#kayit-yenile')?.addEventListener('click', yenile);
 for (const b of document.querySelectorAll('[data-dil]')) b.addEventListener('click', () => setTimeout(ciz));
 
 ciz();
+// Yayınlanmış anlık görüntü hemen çizilir: üstteki canlı kartlar zincir okumasını beklemez
+anlikYukle().then(ciz);
+let olcek;
+addEventListener('resize', () => { clearTimeout(olcek); olcek = setTimeout(ciz, 150); });
 // Bölüm görünür olunca okunur: sayfanın üstündeki mint kartlarıyla aynı anda RPC'ye yüklenmemek için
 const bolum = $('#kayit');
 if (bolum && 'IntersectionObserver' in window) {

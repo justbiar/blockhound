@@ -220,6 +220,14 @@ code { font-family: var(--mono); font-size: 11px; }
 .mint-rozet.ucuz { border: 1px solid var(--blue); background: transparent; color: var(--blue); }
 .mint-rozet.izle { background: var(--elevated); color: var(--bone); }
 .mint-rozet.edildi { border: 1px solid var(--gain); background: transparent; color: var(--gain); }
+.mint-ad { display: flex; align-items: center; gap: 10px; }
+.mint-gorsel { flex: none; width: 32px; height: 32px; border-radius: var(--r-sm); background: var(--peak); object-fit: cover; }
+span.mint-gorsel { display: inline-block; }
+.havuz { display: grid; gap: 4px; min-width: 120px; }
+.havuz .soluk { font-size: 11px; }
+.havuz-cubuk { display: block; height: 4px; border-radius: 2px; background: var(--peak); overflow: hidden; }
+.havuz-cubuk i { display: block; width: 0; height: 100%; background: var(--blue); }
+.havuz-cubuk.dolmak i { background: var(--warn); }
 .mint-rozet.riskli { border: 1px solid var(--warn); background: transparent; color: var(--warn); }
 .mint-rozet.kimliksiz { margin-top: 6px; background: transparent; border: 1px dashed var(--pewter); color: var(--fog); }
 .mint-neden { margin-top: 6px; font-size: 12px; max-width: 280px; overflow-wrap: anywhere; }
