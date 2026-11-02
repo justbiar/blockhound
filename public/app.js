@@ -441,7 +441,9 @@ async function siperYenile() {
   gorulenKaynak[kaynak] = gorulen;
   siperVeri = d;
   const s = d.durum;
-  $('siper-durum').innerHTML = s.sonHata ? `<span class="hata">Tarama hatası: ${esc(s.sonHata)}</span>`
+  const kalanSn = Math.max(0, Math.round(((s.sonrakiDeneme || 0) - Date.now()) / 1000));
+  $('siper-durum').innerHTML = s.sonHata && s.ulasilamiyor ? `<span class="hata">Kaynağa ulaşılamıyor, site kapalı olabilir · ${kalanSn} sn sonra tekrar denenecek</span>`
+    : s.sonHata ? `<span class="hata">Tarama hatası: ${esc(s.sonHata)}</span>`
     : s.sonBasari ? `güncellendi ${esc(new Date(s.sonBasari).toLocaleTimeString(YEREL))}` : 'taranıyor…';
   siperCiz();
 }

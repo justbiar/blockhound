@@ -41,6 +41,11 @@ const UCRET_BASAMAKLARI = ['0.00005', '0.0001', '0.0002', '0.0003', '0.0005', '0
 // UCRETLI: sadece token mintlerinde, 0.01 BNB'ye kadar ödemeyle geçen mintler
 export const BILDIRILEN = new Set(['UCRETSIZ', 'NEREDEYSE-UCRETSIZ', 'UCRETLI']);
 const IZLENEN = new Set(['UCRETSIZ', 'NEREDEYSE-UCRETSIZ', 'UCRETLI', 'IZLE']);
+// Bildirilmiş ve açık mintleri günlerce yeniden kontrol etmek RPC sınırını açılmamış olanlardan çalar. Sonuca göre saklama
+// süresi (gün): açılmamışlar varsayılan süre kalır; ücretli olanlar bedava faz açabilir diye biraz daha uzun tutulur
+export const IZLEME_SURE_GUN = { 'NEREDEYSE-UCRETSIZ': 1, UCRETSIZ: 2, UCRETLI: 2 };
+// Yeniden kontrolde önce açılması beklenenler gelir
+const KONTROL_ONCELIK = { IZLE: 0, 'AGENT-ID-DIGER': 0, UCRETLI: 1, UCRETSIZ: 2, 'NEREDEYSE-UCRETSIZ': 3 };
 
 // Proxy kontratların asıl kodunu bulmak için: EIP-1967 uygulama ve beacon yuvaları, EIP-1167 klon kalıbı
 const UYGULAMA_YUVASI = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
@@ -534,12 +539,13 @@ export class MintTakip extends EventEmitter {
   // görülenlerin en yenileri ve eskilerden sıradaki bir parça kontrol edilir. Açılış saatine bağlı mintleri zamanlı kuyruk yakalar
   async yenidenKontrol() {
     const basla = Date.now();
-    const sinir = basla - this.izlemeGun * 864e5;
     for (const [anahtar, w] of Object.entries(this.izleme)) {
-      if (w.ilkGorulme < sinir || ['TUKENDI', 'ZATEN-ALDIN'].includes(w.sonuc)) delete this.izleme[anahtar];
+      const gun = IZLEME_SURE_GUN[w.sonuc] ?? this.izlemeGun;
+      if (basla - w.ilkGorulme > gun * 864e5 || ['TUKENDI', 'ZATEN-ALDIN'].includes(w.sonuc)) delete this.izleme[anahtar];
     }
     const sirali = Object.entries(this.izleme).sort((a, b) => b[1].ilkGorulme - a[1].ilkGorulme);
-    const gunluk = sirali.filter(([, w]) => basla - w.ilkGorulme < 864e5);
+    const oncelik = (w) => KONTROL_ONCELIK[w.sonuc] ?? 0;
+    const gunluk = sirali.filter(([, w]) => basla - w.ilkGorulme < 864e5).sort((a, b) => oncelik(a[1]) - oncelik(b[1]));
     const yeni = gunluk.slice(0, this.yenidenKontrolYeni);
     const eski = sirali.slice(yeni.length);
     if (this.eskiImlec >= eski.length) this.eskiImlec = 0;

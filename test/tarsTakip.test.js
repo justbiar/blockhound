@@ -62,3 +62,13 @@ test('takip: açılıştaki tokenler için uyarı vermez, aktiviteyi değişmeye
   assert.deepEqual(yeniler, ['HzoFqKoZHi4AKN7EvTDg4RsGr5Q6wVxrKyKFS5WebEFC']);
   assert.equal(t.listeler.yeni[0].piyasaDegeri, 9500);
 });
+
+test('site kapalıysa bağlantı hatası ayrı işaretlenir ve sonraki deneme zamanı yazılır', async () => {
+  const t = new TarsTakip({ aralikMs: 1000, fetchFn: async () => { throw new TypeError('fetch failed'); } });
+  t.baslat();
+  await new Promise((r) => setTimeout(r, 20));
+  t.durdur();
+  assert.equal(t.durum.ulasilamiyor, true);
+  assert.equal(t.durum.hataSayisi, 1);
+  assert.ok(t.durum.sonrakiDeneme > Date.now());
+});

@@ -226,6 +226,24 @@ test('yeniden kontrol: her turda yeniler ve eskilerden bir parça kontrol edilir
   assert.equal(t.durum.sonKontrol.kontrat, 4);
 });
 
+test('yeniden kontrol: sonuca göre saklama süresi uygulanır, açılmamışlar önce kontrol edilir', async () => {
+  const t = takip(sahteProvider({ kod: '0x' }), { yenidenKontrolYeni: 10, yenidenKontrolEski: 10 });
+  const simdi = Date.now();
+  const ekle = (a, sonuc, gunOnce) => { t.izleme[a] = { adres: a, ilkGorulme: simdi - gunOnce * 864e5, sonuc }; };
+  ekle('0x' + '1'.padStart(40, '0'), 'NEREDEYSE-UCRETSIZ', 1.5); // 1 günü geçti: silinir
+  ekle('0x' + '2'.padStart(40, '0'), 'UCRETSIZ', 1.5); // 2 gün dolmadı: kalır
+  ekle('0x' + '3'.padStart(40, '0'), 'UCRETLI', 3); // 2 günü geçti: silinir
+  ekle('0x' + '4'.padStart(40, '0'), 'IZLE', 10); // 14 gün dolmadı: kalır
+  ekle('0x' + '5'.padStart(40, '0'), 'NEREDEYSE-UCRETSIZ', 0.01); // bugün, en sona
+  ekle('0x' + '6'.padStart(40, '0'), 'IZLE', 0.02); // bugün, en başa
+  const kontrol = [];
+  t.incele = async (a) => { kontrol.push(a.slice(-1)); return { adres: a, sonuc: t.izleme[a.toLowerCase()].sonuc, mintler: [] }; };
+  t.bakiyeleriTazele = async () => {};
+  await t.yenidenKontrol();
+  assert.deepEqual(Object.keys(t.izleme).map((a) => a.slice(-1)).sort(), ['2', '4', '5', '6']);
+  assert.deepEqual(kontrol.slice(0, 2), ['6', '5']);
+});
+
 test('blok havuzu: hata veren RPC atlanır, blok sıradaki RPC ile okunur', async () => {
   const tx = '0x' + 'cd'.repeat(32);
   const bozuk = { send: async () => { throw new Error('limit exceeded'); } };

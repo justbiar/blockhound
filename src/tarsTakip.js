@@ -7,6 +7,7 @@ export const TARS_URL = 'https://tars.meme';
 const BITMEK_UZERE = 70; // curve yüzdesi
 const AKTIVITE_TUR_BASI = 8; // her turda en fazla bu kadar tokenin işlem akışı okunur
 const SOLANA_ADRES = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+const BAGLANTI_HATASI = /fetch failed|ENOTFOUND|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|UND_ERR|aborted/i;
 
 const sayi = (v) => (v == null || v === '' ? null : Number.isFinite(Number(v)) ? Number(v) : null);
 const url = (u) => (typeof u === 'string' && /^https:\/\//.test(u) ? u : null);
@@ -152,8 +153,14 @@ export class TarsTakip extends EventEmitter {
     this.durum.calisiyor = true;
     const dongu = async () => {
       if (!this.durum.calisiyor) return;
-      await this.tur().catch((e) => { this.durum.sonHata = e.message; this.durum.hataSayisi++; });
+      await this.tur().then(() => { this.durum.ulasilamiyor = false; }).catch((e) => {
+        this.durum.sonHata = e.message;
+        this.durum.hataSayisi++;
+        // Bağlantı hiç kurulamadıysa (site kapalı, DNS ya da zaman aşımı) arayüz ham hata yerine bunu söyler
+        this.durum.ulasilamiyor = BAGLANTI_HATASI.test(`${e.message} ${e.cause?.code || ''}`) || e.name === 'AbortError';
+      });
       const bekle = Math.min(120_000, this.aralikMs * 2 ** Math.min(this.durum.hataSayisi, 3));
+      this.durum.sonrakiDeneme = Date.now() + bekle;
       this.zamanlayici = setTimeout(dongu, bekle);
     };
     dongu();

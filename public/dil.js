@@ -285,6 +285,8 @@ const KALIPLAR = [
   [/^([\d.,]+) \/ ([\d.,?]+) SOL$/, (m) => `${m[1]} / ${m[2]} SOL`],
   [/^%(-?[\d.,]+)$/, (m) => `${m[1]}%`],
   [/^güncellendi (.+)$/, (m) => `updated ${m[1]}`],
+  [/^Kaynağa ulaşılamıyor, site kapalı olabilir · (\d+) sn sonra tekrar denenecek$/, (m) => `Source unreachable, the site may be down · retrying in ${m[1]} s`],
+  [/^Tarama hatası: (.+)$/, (m) => `Scan error: ${m[1]}`],
   [/^blok ([\d.,]+) · güncellendi (.+?)( · yeni bloklar okunamadı, tekrar denenecek)?$/, (m) => `block ${m[1]} · updated ${m[2]}${m[3] ? ' · new blocks could not be read, will retry' : ''}`],
   [/^(\d+) cüzdan · güncellendi (.+?)( · varlık değeri (\d+)\/(\d+))?$/, (m) => `${m[1]} wallets · updated ${m[2]}${m[3] ? ` · holdings value ${m[4]}/${m[5]}` : ''}`],
   [/^(\d+) mint$/, (m) => `${m[1]} mint${m[1] === '1' ? '' : 's'}`],
