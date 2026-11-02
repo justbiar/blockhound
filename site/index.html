@@ -5,14 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Blockhound · HOUND mint</title>
   <meta name="description" content="HOUND 代币和 BlockHound NFT 通过工作量证明铸造：任何人都可以计算哈希，只有持有 Binance Agent ID 的钱包才能 mint。Blockhound 是从第一个区块嗅出 BSC 新 mint 的开源代理。">
-  <meta name="theme-color" content="#111111">
+  <meta name="theme-color" content="#efece6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
+  <script>try { const t = localStorage.getItem('tema'); if (t === 'acik' || t === 'koyu') document.documentElement.dataset.tema = t; } catch {}</script>
   <meta property="og:title" content="Blockhound · HOUND mint">
   <meta property="og:description" content="找到哈希，铸造猎犬。只有持有 Binance Agent ID 的钱包才能 mint。">
   <meta property="og:image" content="logo.svg">
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400&family=Inter:wght@400;500;600&family=Fira+Code:wght@400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap">
+  <script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }</script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -31,6 +34,7 @@
       <a href="https://github.com/justbiar/blockhound" class="gh" rel="noopener">GitHub</a>
     </nav>
     <a class="dugme ana kucuk ust-mint" href="#mint" data-i18n="u_cta1">开始 mint</a>
+    <button type="button" class="tema-dugme" id="tema-dugme" aria-label="Tema" title="Tema"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg></button>
     <div class="dil" role="group" aria-label="Dil / Language">
       <button type="button" data-dil="zh" aria-pressed="true">中文</button>
       <button type="button" data-dil="en" aria-pressed="false">EN</button>
@@ -38,11 +42,33 @@
   </header>
 
   <main id="ana">
-    <!-- 1. Mint: sayfanın en başı -->
-    <section class="mint-kahraman">
+    <!-- Giriş: robot tazı, kendi kendine yazan istem kutusu, gradyan çerçeveli başlık -->
+    <section id="giris" class="giris">
+      <canvas id="kopek-sahne" aria-hidden="true"></canvas>
+      <img class="giris-yedek" src="logo.svg" alt="" width="220" height="220">
+      <div class="istem rv">
+        <span class="istem-sekme" aria-hidden="true">“</span>
+        <div class="istem-kutu"><span id="istem-yazi"></span><i class="imlec" aria-hidden="true"></i></div>
+        <p class="istem-sonraki" id="istem-sonraki" aria-hidden="true"></p>
+      </div>
+      <ul class="ozellik-liste rv">
+        <li data-i18n="oz1">嗅探新合约</li>
+        <li data-i18n="oz2">用你的钱包模拟</li>
+        <li data-i18n="oz3">过滤风险</li>
+        <li class="soluk" data-i18n="oz4">工作量证明 mint</li>
+      </ul>
+      <div class="giris-alt">
+        <p class="giris-ust rv"><span class="canli-nokta" aria-hidden="true"></span><span data-i18n="u_rozet">工作量证明 mint · 仅限 Agent ID</span></p>
+        <h1 class="rv"><span class="baslik-kutu b1" data-i18n="u_b1">找到哈希，</span><span class="baslik-kutu b2" data-i18n="u_b2">铸造猎犬。</span></h1>
+      </div>
+      <p class="giris-aciklama rv" data-i18n="g_alt">从第一个区块嗅出 BNB Chain 上的新 mint。HOUND 和 BlockHound 只对 Agent ID 钱包开放。</p>
+      <a class="kaydir rv" href="#mint-giris"><span data-i18n="g_kaydir">向下滚动</span><span class="ok" aria-hidden="true">↓</span></a>
+    </section>
+
+    <section class="mint-kahraman" id="mint-giris">
       <div class="mk-metin">
-        <p class="rozet-satir"><span class="canli-nokta" aria-hidden="true"></span><span data-i18n="u_rozet">工作量证明 mint · 仅限 Agent ID</span></p>
-        <h1 data-i18n="u_baslik">找到哈希，铸造猎犬。</h1>
+        <p class="ust-yazi" data-i18n="mk_ust">第 1 步之前</p>
+        <h2 data-i18n="mk_baslik">任何人都能找哈希，只有代理能 mint。</h2>
         <p class="alt" data-i18n="u_alt">HOUND 和 BlockHound 没有任何预挖。任何人都可以计算哈希，但只有持有 Binance Agent ID 的钱包才能 mint。供应量无上限，每个周期难度翻倍：一段时间后 mint 实际上将无法完成。</p>
         <div class="cta">
           <a class="dugme ana" href="#mint" data-i18n="u_cta1">开始 mint</a>
@@ -345,7 +371,7 @@ keccak256(abi.encodePacked(challenge(), msg.sender, nonce)) &lt;= type(uint256).
     <section id="tur" class="bolum">
       <p class="ust-yazi" data-i18n="tu_ust">终端导览</p>
       <h2 data-i18n="tu_baslik">内部一览</h2>
-      <p class="alt" data-i18n="tu_alt">截图来自真实终端和实时链上数据。终端支持英文和土耳其文界面。钱包余额和地址已模糊处理，不显示个人持仓。</p>
+      <p class="alt" data-i18n="tu_alt">截图来自真实终端和实时链上数据。终端支持英文、土耳其文和中文界面。钱包余额和地址已模糊处理，不显示个人持仓。</p>
       <div class="tur-sekme" role="tablist" aria-label="终端栏目">
         <button type="button" role="tab" id="tur-mintler" aria-controls="tur-panel" aria-selected="true" data-tursekme="mintler" data-i18n="tu_mintler">Mint</button>
         <button type="button" role="tab" id="tur-hound" aria-controls="tur-panel" aria-selected="false" tabindex="-1" data-tursekme="hound">HOUND</button>
@@ -420,5 +446,7 @@ keccak256(abi.encodePacked(challenge(), msg.sender, nonce)) &lt;= type(uint256).
   <script type="module" src="hound/mint.js"></script>
   <script type="module" src="hound/sayfa.js"></script>
   <script type="module" src="hound/kayit.js"></script>
+  <script type="module" src="hound/giris.js"></script>
+  <script type="module" src="hound/kopek.js"></script>
 </body>
 </html>

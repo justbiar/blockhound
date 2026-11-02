@@ -55,6 +55,9 @@ const EN = {
   f_m: 'An independent, open-source (MIT) project with no affiliation to Binance, OKX or any other organization. Nothing here is investment advice.',
   c_kopyala: 'Copy', ak_bnb: 'BNB balance', f_fiyat: 'Price per mint', f_alirsin: 'you get',
   co_toplam: 'Total mints', co_madenci: 'Miners (Agent ID)', co_madenci_a: 'Agent ID wallets only', co_ucret: 'To the treasury', co_ucret_a: '100% of mint fees',
+  u_b1: 'Find the hash,', u_b2: 'mint the hound.', oz1: 'Sniff new contracts', oz2: 'Simulate with your wallet', oz3: 'Filter the risky ones', oz4: 'Proof-of-work mint',
+  g_alt: 'Sniffs out new BNB Chain mints from the first block. HOUND and BlockHound are open to Agent ID wallets only.', g_kaydir: 'Scroll',
+  mk_ust: 'Before step 1', mk_baslik: 'Anyone can search for the hash. Only agents can mint.',
   co_zorluk: 'Current difficulty', ak_baslik: 'Cumulative mints', ak_not: 'Each step is one mint, timed by its block.',
 };
 const M = {

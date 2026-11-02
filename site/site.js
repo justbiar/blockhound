@@ -1,7 +1,7 @@
 // Blockhound tanıtım sitesi: Çince (varsayılan) / İngilizce dil seçimi ve yayınlanmış rakamlar (istatistik.json). Cüzdana bağlanmaz.
 const EN = {
   atla: 'Skip to content', m_nasil: 'How it works', m_tur: 'Terminal',
-  tu_ust: 'Terminal tour', tu_baslik: 'A look inside', tu_alt: 'These screenshots come from the real terminal with live chain data. The terminal UI is available in English and Turkish. The wallet balance and address are blurred; no personal portfolio is shown.',
+  tu_ust: 'Terminal tour', tu_baslik: 'A look inside', tu_alt: 'These screenshots come from the real terminal with live chain data. The terminal UI is available in English, Turkish and Chinese. The wallet balance and address are blurred; no personal portfolio is shown.',
   tu_mintler: 'Mints', tu_siper: 'Launches', tu_liderler: 'Leaders', tu_ayarlar: 'Settings', m_guvenlik: 'Safety', m_rakamlar: 'Numbers', m_kur: 'Install', m_sss: 'FAQ',
   h_ust: 'BNB Chain · open-source mint agent',
   h_baslik: 'Sniffs out new mints from the first block.',
