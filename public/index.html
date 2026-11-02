@@ -6,20 +6,22 @@
   <meta name="api-token" content="__API_TOKEN__">
   <title>Blockhound</title>
   <meta name="description" content="Blockhound: BSC'de yeni mintleri ilk bloktan koklayan, ücretsiz olanları otomatik mintleyen ajan terminali">
-  <meta name="theme-color" content="#111111">
-  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <meta name="theme-color" content="#121214">
+  <script src="tema.js"></script>
+  <link rel="icon" type="image/png" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400&family=Inter:wght@400;500;600&family=Fira+Code:wght@400;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="ust">
-    <div class="marka"><img src="logo.svg" alt="" width="30" height="30"><span>Blockhound</span></div>
+    <div class="marka"><img src="logo.png" alt="" width="32" height="32"><span>Blockhound</span></div>
     <span id="mod" class="rozet">…</span>
     <span id="limit" class="ust-bilgi"></span>
     <div class="ust-sag">
       <button type="button" id="ust-cuzdan" class="cuzdan-cip" data-git="cuzdan">Cüzdan…</button>
+      <button type="button" class="tema-dugme" id="tema-dugme" aria-label="Temayı değiştir" title="Temayı değiştir"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg></button>
       <button type="button" id="acil-btn" class="dugme tehlike">Acil durdur</button>
     </div>
   </header>

@@ -170,6 +170,7 @@ const SOZLUK = new Map(Object.entries({
   'Brave anahtarı olunca sosyal ajanın web araması ücretsiz yapılır (Brave her ay 5 $ ücretsiz kredi veriyor: yaklaşık 1.000 arama; ödemeli bakiye yüklemezsen kota bitince ücret kesilmez, arama durur). Anahtar yoksa arama OpenRouter üzerinden ücretli yapılır ya da "Web arama sonucu" 0 ise hiç yapılmaz. Anahtarı api-dashboard.search.brave.com adresinden Search planıyla alabilirsin.': 'With a Brave key the social agent searches the web for free (Brave gives 5 dollars of free credit a month: about 1,000 searches; without a paid balance nothing is charged when the quota runs out, search just stops). Without a key search goes through OpenRouter for a fee, or not at all if "Web search results" is 0. Get a key with the Search plan at api-dashboard.search.brave.com.',
   // Ek etiketler
   "Adsız": "Untitled",
+  "Temayı değiştir": "Toggle theme",
   "Henüz araştırma yok": "No research yet",
   "Adres": "Address",
   "Oturum bitişi": "Session ends",

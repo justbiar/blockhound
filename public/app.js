@@ -635,16 +635,19 @@ $('portfoy-bolum').addEventListener('change', (e) => portfoyBolum(e.target.value
 
 // ---------- Grafikler (TradingView Lightweight Charts, projenin içinde) ----------
 const LWC = window.LightweightCharts;
+// Renkler temadan okunur; tema değişince açık grafikler aynı seçeneklerle boyanır
+const grafikRenk = () => ({
+  layout: { background: { color: 'transparent' }, textColor: renk('--fog'), fontFamily: renk('--sans') },
+  grid: { vertLines: { color: renk('--elevated') }, horzLines: { color: renk('--elevated') } },
+  rightPriceScale: { borderColor: renk('--peak') }, timeScale: { borderColor: renk('--peak'), timeVisible: true },
+});
 function grafikYap(kap) {
-  const g = LWC.createChart(kap, {
-    autoSize: true,
-    layout: { background: { color: 'transparent' }, textColor: renk('--fog'), fontFamily: renk('--sans') },
-    grid: { vertLines: { color: renk('--elevated') }, horzLines: { color: renk('--elevated') } },
-    rightPriceScale: { borderColor: renk('--peak') }, timeScale: { borderColor: renk('--peak'), timeVisible: true },
-    localization: { locale: YEREL },
-  });
-  return g;
+  return LWC.createChart(kap, { autoSize: true, ...grafikRenk(), localization: { locale: YEREL } });
 }
+addEventListener('tema-degisti', () => {
+  for (const g of [seriGrafik, tokenGrafik]) g?.applyOptions(grafikRenk());
+  seriCiz();
+});
 const sn = (ms) => Math.floor(ms / 1000);
 
 let seriGrafik = null, seriVeri = null;

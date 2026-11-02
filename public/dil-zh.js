@@ -443,6 +443,7 @@ export const ZH = new Map(Object.entries({
   "How many web results the social agent reads per research. Even with a free model each result costs about 0.4 cents on OpenRouter. 0 = web search off.": "社交 Agent 每次研究读取的网络结果数。即使用免费模型，每条结果在 OpenRouter 上也约花 0.4 美分。0 = 关闭网络搜索。",
   "With a Brave key the social agent searches the web for free (Brave gives 5 dollars of free credit a month: about 1,000 searches; without a paid balance nothing is charged when the quota runs out, search just stops). Without a key search goes through OpenRouter for a fee, or not at all if \"Web search results\" is 0. Get a key with the Search plan at api-dashboard.search.brave.com.": "有 Brave 密钥时，社交 Agent 可免费搜索网络（Brave 每月赠送 5 美元额度：约 1,000 次搜索；没有付费余额时，额度用完不会扣费，只是停止搜索）。没有密钥时，搜索通过 OpenRouter 付费进行；如果「网络搜索结果数」为 0 则不搜索。在 api-dashboard.search.brave.com 用 Search 套餐获取密钥。",
   "Untitled": "未命名",
+  "Toggle theme": "切换主题",
   "No research yet": "暂无研究",
   "Address": "地址",
   "Session ends": "会话结束",
