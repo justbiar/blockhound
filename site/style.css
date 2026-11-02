@@ -581,5 +581,10 @@ summary::after { font-family: var(--mono); }
 /* NFT önizlemesi: 3D kart hazırsa SVG gizlenir, yoksa SVG görünür */
 .nft-onizleme { position: relative; overflow: visible; border: 0 !important; background: transparent; }
 .nft-svg, .nft-svg svg { display: block; width: 100%; height: 100%; }
-.nft-tuval { position: absolute; inset: -6%; width: 112% !important; height: 112% !important; cursor: grab; }
+.onizleme-tuval { position: absolute; inset: -6%; width: 112% !important; height: 112% !important; cursor: grab; }
 .nft-onizleme.uc-boyut .nft-svg { visibility: hidden; }
+/* HOUND parası: 3D hazırsa düz görsel ve zemin gizlenir, NFT kartıyla aynı kutu */
+.token-onizleme { position: relative; }
+.token-yedek { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.token-onizleme.uc-boyut { background: transparent; border: 0 !important; overflow: visible; }
+.token-onizleme.uc-boyut .token-yedek { visibility: hidden; }
