@@ -1,0 +1,67 @@
+<!doctype html>
+<!-- Site logosunu robot tazının başından üretir. Proje kökünden sunulmalı (site/hound/kopek-model.js okunur):
+     python3 -m http.server 8792 ve tarayıcıda 127.0.0.1:8792/scripts/logo-uret.html. Sonuç window.LOGO'da (PNG data URL). -->
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Logo üretici</title>
+<script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }</script>
+<style>body { margin: 0; background: #888; } canvas { display: block; margin: 16px; }</style>
+</head>
+<body>
+<canvas id="cikti" width="512" height="512"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { kopekModeli } from '../site/hound/kopek-model.js';
+
+const B = 1024;
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setSize(B, B);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const sahne = new THREE.Scene();
+sahne.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+sahne.environmentIntensity = 0.9;
+sahne.add(new THREE.HemisphereLight(0xf4f8ff, 0xd2d6de, 0.7));
+const anahtar = new THREE.DirectionalLight(0xf6f8ff, 1.8);
+anahtar.position.set(-3, 4, 5);
+sahne.add(anahtar);
+const kenar = new THREE.DirectionalLight(0xb9a8ff, 1.4);
+kenar.position.set(4, 2, -3);
+sahne.add(kenar);
+
+// Yalnızca baş: gövdeden ayrılır, hafif yana dönük ve eğik
+const { kafa, yuz, yuzCiz } = kopekModeli();
+kafa.removeFromParent();
+kafa.scale.setScalar(1);
+kafa.position.set(0.1, -0.1, 0);
+kafa.rotation.set(0.12, -0.38, 0.06);
+sahne.add(kafa);
+yuz.bakX = 0.35; yuz.bakY = 0.1;
+yuzCiz();
+
+const kamera = new THREE.PerspectiveCamera(26, 1, 0.1, 50);
+kamera.position.set(0, 0.25, 4.1);
+kamera.lookAt(0, 0.02, 0);
+renderer.render(sahne, kamera);
+
+// Karo: koyu yuvarlak kare, ince marka gradyanı kenarlık, ortada baş
+const c = document.getElementById('cikti').getContext('2d');
+const K = 512, r = 112;
+const yol = () => { c.beginPath(); c.roundRect(6, 6, K - 12, K - 12, r); };
+const zemin = c.createLinearGradient(0, 0, K, K);
+zemin.addColorStop(0, '#1d1f26'); zemin.addColorStop(1, '#0e0f13');
+yol(); c.fillStyle = zemin; c.fill();
+const kenarlik = c.createLinearGradient(0, 0, K, K);
+for (const [d, renk] of [[0, '#00c2ff'], [0.4, '#2b7fff'], [0.75, '#7a5cff'], [1, '#b45cff']]) kenarlik.addColorStop(d, renk);
+c.lineWidth = 8; c.strokeStyle = kenarlik; yol(); c.stroke();
+c.save(); yol(); c.clip();
+c.drawImage(renderer.domElement, 0, 0, B, B, 0, 0, K, K);
+c.restore();
+window.LOGO = document.getElementById('cikti').toDataURL('image/png');
+</script>
+</body>
+</html>

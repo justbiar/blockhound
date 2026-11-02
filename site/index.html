@@ -10,8 +10,9 @@
   <script>try { const t = localStorage.getItem('tema'); if (t === 'acik' || t === 'koyu') document.documentElement.dataset.tema = t; } catch {}</script>
   <meta property="og:title" content="Blockhound · HOUND mint">
   <meta property="og:description" content="找到哈希，铸造猎犬。只有持有 Binance Agent ID 的钱包才能 mint。">
-  <meta property="og:image" content="logo.svg">
-  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <meta property="og:image" content="https://blockhound.pages.dev/logo.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="logo-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap">
@@ -21,7 +22,7 @@
 <body>
   <a class="atla" href="#ana" data-i18n="atla">跳到正文</a>
   <header class="ust">
-    <a class="marka" href="#" aria-label="Blockhound"><img src="logo.svg" alt="" width="32" height="32"><span>Blockhound</span></a>
+    <a class="marka" href="#" aria-label="Blockhound"><img src="favicon.png" alt="" width="32" height="32"><span>Blockhound</span></a>
     <nav class="menu" aria-label="栏目">
       <a href="#mint" data-i18n="m_mint">Mint</a>
       <a href="#nasil" data-i18n="m_nasil">工作原理</a>
@@ -41,11 +42,15 @@
     </div>
   </header>
 
+  <div class="ray" aria-hidden="true">
+    <div class="ray-noktalar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <span class="ray-etiket" id="ray-etiket"><svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor"/><path d="M8 4.5v3.5l2.5 1.5" fill="none" stroke="currentColor"/></svg><b id="ray-ad">INTRO</b></span>
+  </div>
   <main id="ana">
     <!-- Giriş: robot tazı, kendi kendine yazan istem kutusu, gradyan çerçeveli başlık -->
     <section id="giris" class="giris">
       <canvas id="kopek-sahne" aria-hidden="true"></canvas>
-      <img class="giris-yedek" src="logo.svg" alt="" width="220" height="220">
+      <img class="giris-yedek" src="logo.png" alt="" width="220" height="220">
       <div class="istem rv">
         <span class="istem-sekme" aria-hidden="true">“</span>
         <div class="istem-kutu"><span id="istem-yazi"></span><i class="imlec" aria-hidden="true"></i></div>
@@ -116,7 +121,7 @@
             <h2 data-i18n="hk_baslik">10,000 HOUND</h2>
             <p class="kucuk-yazi" data-i18n="hk_alt">ERC-20 · 每个解固定奖励 · 每 1,000 次 mint 难度 +1 位</p>
           </header>
-          <div class="token-onizleme" aria-hidden="true"><img src="logo.svg" alt="" width="72" height="72"><b>10,000</b><span>HOUND</span></div>
+          <div class="token-onizleme" aria-hidden="true"><img src="logo-180.png" alt="" width="72" height="72"><b>10,000</b><span>HOUND</span></div>
           <div class="fiyat">
             <p class="fiyat-ust" data-i18n="f_fiyat">每次 mint 价格</p>
             <p class="fiyat-bnb"><span data-alan="fiyat-bnb">—</span> <span class="birim">BNB</span></p>
@@ -152,7 +157,7 @@
             <h2 data-i18n="nk_baslik">1 个 BlockHound NFT</h2>
             <p class="kucuk-yazi" data-i18n="nk_alt">ERC-721 · 图像完全上链，由你的哈希生成 · 每 250 次 mint 难度 +1 位</p>
           </header>
-          <div class="nft-onizleme" data-alan="onizleme" role="img" aria-label="BlockHound 示例图像"></div>
+          <div class="nft-onizleme" role="img" aria-label="BlockHound 示例图像"><div class="nft-svg" data-alan="onizleme"></div></div>
           <div class="fiyat">
             <p class="fiyat-ust" data-i18n="f_fiyat">每次 mint 价格</p>
             <p class="fiyat-bnb"><span data-alan="fiyat-bnb">—</span> <span class="birim">BNB</span></p>
@@ -355,7 +360,7 @@ keccak256(abi.encodePacked(challenge(), msg.sender, nonce)) &lt;= type(uint256).
           <a class="dugme" href="#kur" data-i18n="h_cta2">在自己电脑上运行</a>
         </div>
       </div>
-      <img src="logo.svg" alt="" width="200" height="200" class="arac-logo">
+      <img src="logo.png" alt="" width="200" height="200" class="arac-logo">
     </section>
 
     <section id="arac-nasil" class="bolum">
@@ -438,7 +443,7 @@ keccak256(abi.encodePacked(challenge(), msg.sender, nonce)) &lt;= type(uint256).
   </main>
 
   <footer class="alt-bilgi">
-    <div class="marka kucuk"><img src="logo.svg" alt="" width="24" height="24"><span>Blockhound</span></div>
+    <div class="marka kucuk"><img src="favicon.png" alt="" width="24" height="24"><span>Blockhound</span></div>
     <p data-i18n="f_m">独立的开源（MIT）项目，与 Binance、OKX 或任何其他机构无关。所有内容均不构成投资建议。</p>
     <a class="gh-alt" href="https://github.com/justbiar/blockhound" rel="noopener">GitHub</a>
   </footer>
@@ -448,5 +453,6 @@ keccak256(abi.encodePacked(challenge(), msg.sender, nonce)) &lt;= type(uint256).
   <script type="module" src="hound/kayit.js"></script>
   <script type="module" src="hound/giris.js"></script>
   <script type="module" src="hound/kopek.js"></script>
+  <script type="module" src="hound/nftkart.js"></script>
 </body>
 </html>

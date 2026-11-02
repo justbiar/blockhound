@@ -59,3 +59,32 @@ if (dugme) {
   sistemKoyu.addEventListener('change', etiketle);
   for (const b of document.querySelectorAll('[data-dil]')) b.addEventListener('click', () => setTimeout(etiketle));
 }
+
+// Sağ ray: görünür alanın ortasındaki bölümün adı rayda o bölümün sırasına göre kayar
+const RAY = [
+  ['giris', 'INTRO', '开场'], ['mint-giris', 'AGENT', '代理'], ['mint', 'MINT', 'MINT'], ['nasil', 'RULES', '规则'], ['zorluk', 'CURVE', '难度'],
+  ['kayit', 'LOG', '记录'], ['kontratlar', 'CONTRACTS', '合约'], ['prompt', 'PROMPT', '提示词'], ['arac', 'TERMINAL', '终端'], ['sss', 'FAQ', '问答'],
+];
+const rayEtiket = document.getElementById('ray-etiket');
+const rayAd = document.getElementById('ray-ad');
+let raySira = 0;
+function rayYaz() {
+  const [, en, zh] = RAY[raySira];
+  rayAd.textContent = dil() === 'en' ? en : zh;
+  rayEtiket.style.top = `${(raySira / (RAY.length - 1)) * (270 - rayEtiket.offsetHeight)}px`;
+}
+if (rayEtiket) {
+  // Ekranın ortasının üstünden geçmiş son bölüm seçilir: hızlı kaydırmada ya da bağlantıyla atlamada da doğru kalır
+  const bolumler = RAY.map(([id]) => document.getElementById(id));
+  let bekliyor = false;
+  const hesapla = () => {
+    bekliyor = false;
+    let yeni = 0;
+    bolumler.forEach((b, i) => { if (b && b.getBoundingClientRect().top <= innerHeight / 2) yeni = i; });
+    if (yeni !== raySira) { raySira = yeni; rayYaz(); }
+  };
+  addEventListener('scroll', () => { if (!bekliyor) { bekliyor = true; requestAnimationFrame(hesapla); } }, { passive: true });
+  hesapla();
+  for (const b of document.querySelectorAll('[data-dil]')) b.addEventListener('click', () => setTimeout(rayYaz));
+  rayYaz();
+}

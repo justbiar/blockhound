@@ -468,3 +468,118 @@ body { overflow-x: clip; }
   .imlec, .kaydir .ok { animation: none; }
   .rv-hazir .rv { transform: none; transition: opacity 0.3s; }
 }
+
+/* ================= Sayfanın geri kalanı: ince çizgiler, keskin köşeler, mono etiketler ================= */
+:root { --cizgi: rgba(255, 255, 255, 0.13); }
+:root[data-tema=acik] { --cizgi: rgba(20, 20, 20, 0.16); }
+@media (prefers-color-scheme: light) { :root:not([data-tema=koyu]) { --cizgi: rgba(20, 20, 20, 0.16); } }
+
+/* Kutular: kağıt zemin, tek çizgi çerçeve, gölge yok */
+.kart, .adimlar li, .mint-kart, .fiyat, .olcu div, .canli-ozet div, .ajan-kutu, .kayit-tablo, .grafik, .kod, .serit, .kurulum li,
+.rakamlar div, .kayit-ozet div, .ajan-kart dl div, .token-onizleme, .nft-onizleme, .tur-cerceve, .ipucu, .bilgi-serit, .zorluk-simdi, .uyari,
+.ajan-satir input, .cip, .cip button, .sekme, .tur-sekme button, .tema-dugme, .dil, .kaydir .ok, .hound > div {
+  border-radius: 0;
+}
+.kart, .adimlar li, .mint-kart, .canli-ozet div, .ajan-kutu, .kayit-tablo, .grafik, .serit, .kurulum li, .rakamlar div, .kayit-ozet div {
+  background: var(--canvas); border: 1px solid var(--cizgi); box-shadow: none;
+}
+.fiyat, .olcu div, .ajan-kart dl div, .kod { background: var(--kuyu); border: 1px solid var(--cizgi); }
+.ajan-kutu { position: relative; }
+.ajan-kutu::before, .ajan-kutu::after, .mint-kart::after { content: ''; position: absolute; width: 9px; height: 9px; border: 1px solid var(--bone); pointer-events: none; }
+.ajan-kutu::before { left: -5px; top: -5px; border-right: 0; border-bottom: 0; }
+.ajan-kutu::after { right: -5px; bottom: -5px; border-left: 0; border-top: 0; }
+.tur-cerceve, .arac-logo, .kahraman-gorsel img, .marka img { box-shadow: 0 0 0 1px var(--cizgi); }
+.token-onizleme, .nft-onizleme { box-shadow: none; border: 1px solid var(--cizgi); }
+.serit div, .serit div:nth-child(even) { border-color: var(--cizgi); }
+.ajan-satir input { border-color: var(--cizgi); background: var(--canvas); }
+.ajan-satir input:focus-visible { outline-offset: 0; }
+.bilgi-serit, .zorluk-simdi { background: transparent; border: 1px solid var(--cizgi); border-left: 2px solid var(--blue); }
+.uyari { background: transparent; border: 1px solid var(--cizgi); border-left: 2px solid var(--warn); }
+
+/* Mint kartı: üstte ince renk çizgisi, sağ altta köşe işareti */
+.mint-kart { position: relative; border-top: 2px solid var(--blue); }
+.mint-kart[data-tur=blockhound] { border-top-color: #b45cff; }
+.mint-kart[data-tur=blockhound] .ilerleme span { background: #b45cff; }
+.mint-kart::after { right: -5px; bottom: -5px; border-left: 0; border-top: 0; }
+.ilerleme { height: 4px; border-radius: 0; background: var(--cizgi); }
+
+/* Canlı kartlar: vurgulu kart gradyan çerçeveli, dolgu yok */
+.canli-ozet { gap: 0; }
+.canli-ozet div + div { border-left: 0; }
+.canli-ozet .vurgu { border: 2px solid transparent; background: linear-gradient(var(--canvas), var(--canvas)) padding-box, var(--marka) border-box; box-shadow: none; }
+.canli-ozet .vurgu dt, .canli-ozet .vurgu p { color: var(--fog); }
+.canli-ozet .vurgu dd { color: var(--bone); }
+.canli-ozet dt, .olcu dt, .ajan-kart dt, .fiyat-ust, .kayit-ozet dt, .rakamlar dt, .serit dt { font: 500 11px var(--mono); letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* Düğmeler: mono, büyük harf. Ana düğme mürekkep renginde, solda marka şeridi */
+.dugme { font: 500 12px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; border-radius: 0; border-color: var(--cizgi); min-height: 42px; }
+.dugme:hover:not(:disabled) { background: var(--kuyu); border-color: var(--bone); }
+.dugme.ana { position: relative; background: var(--bone); border-color: var(--bone); color: var(--canvas); padding-left: 24px; }
+.dugme.ana::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--marka); }
+.dugme.ana:hover:not(:disabled) { background: var(--bone); border-color: var(--bone); opacity: 0.88; }
+.dugme.kucuk { min-height: 36px; }
+.cip { border-color: var(--cizgi); background: var(--canvas); }
+.cip button { font: 500 11px var(--mono); text-transform: uppercase; }
+
+/* Sekmeler: seçili olan çerçeveli ve köşe işaretli, diğerleri soluk */
+.sekme { border-color: var(--cizgi); }
+.sekme button { font: 500 12px var(--mono); letter-spacing: 0.05em; text-transform: uppercase; }
+.sekme button[aria-pressed=true] { background: var(--bone); color: var(--canvas); }
+.tur-sekme button { position: relative; border-color: transparent; background: transparent; color: var(--smoke); font: 500 12px var(--mono); letter-spacing: 0.05em; text-transform: uppercase; }
+.tur-sekme button[aria-selected=true] { background: transparent; color: var(--bone); border-color: var(--bone); }
+.tur-sekme button[aria-selected=true]::before, .tur-sekme button[aria-selected=true]::after { content: ''; position: absolute; width: 6px; height: 6px; border: 1px solid var(--bone); }
+.tur-sekme button[aria-selected=true]::before { left: -4px; top: -4px; border-right: 0; border-bottom: 0; }
+.tur-sekme button[aria-selected=true]::after { right: -4px; bottom: -4px; border-left: 0; border-top: 0; }
+.tur-sekme button:hover:not([aria-selected=true]) { background: transparent; color: var(--bone); }
+
+/* Bölüm başlıkları: numaralı mono etiket, büyük ince başlık */
+main { counter-reset: bolum; }
+.bolum, .mint-kahraman { border-top-color: var(--izgara); }
+.bolum > .ust-yazi, .bolum > div > .ust-yazi, .mint-kahraman .ust-yazi { counter-increment: bolum; display: flex; align-items: center; gap: 10px; color: var(--bone); }
+.bolum > .ust-yazi::before, .bolum > div > .ust-yazi::before, .mint-kahraman .ust-yazi::before { content: counter(bolum, decimal-leading-zero) ' /'; color: var(--smoke); }
+.bolum h2, .mint-kahraman h2 { font-size: clamp(30px, 3.05vw, 54px); font-weight: 400; line-height: 1.08; letter-spacing: -0.03em; }
+.bolum h3 { font-weight: 500; }
+.adim-no { font: 500 11px var(--mono); letter-spacing: 0.05em; color: var(--smoke); }
+.adimlar { gap: 0; }
+.adimlar li + li { border-left: 0; }
+.kartlar { gap: 0; }
+.kartlar .kart:nth-child(even) { border-left: 0; }
+.kartlar .kart:nth-child(n+3) { border-top: 0; }
+
+/* Tablolar ve SSS */
+.kayit-tablo th, .tablo-ac th { font: 500 11px var(--mono); letter-spacing: 0.05em; text-transform: uppercase; color: var(--smoke); }
+.kayit-tablo th, .kayit-tablo td, .tablo-ac th, .tablo-ac td, .ozellik div { border-color: var(--izgara); }
+details { border-bottom-color: var(--cizgi); }
+summary::after { font-family: var(--mono); }
+.rozet { border-radius: 0; font: 500 11px var(--mono); text-transform: uppercase; }
+
+/* Sağ ray: hangi bölümde olduğunu gösterir (geniş ekranda) */
+.ray { position: fixed; right: max(14px, 1.2vw); top: 50%; height: 270px; translate: 0 -50%; z-index: 15; width: 64px; pointer-events: none; display: none; }
+.ray-noktalar { position: absolute; right: 30px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: space-between; }
+.ray-noktalar i { width: 2px; height: 2px; background: var(--smoke); }
+.ray-etiket { position: absolute; right: 0; top: 0; display: grid; justify-items: center; gap: 4px; padding: 6px 0; background: var(--canvas); font: 500 10px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; transition: top 0.7s cubic-bezier(0.6, 0, 0.2, 1); width: 64px; text-align: center; }
+.ray-etiket svg { color: var(--bone); }
+@media (min-width: 1300px) { .ray { display: block; } }
+@media (max-width: 720px) {
+  .canli-ozet div + div { border-left: 1px solid var(--cizgi); }
+  .canli-ozet div:nth-child(even) { border-left: 0; }
+  .canli-ozet div:nth-child(n+3) { border-top: 0; }
+  .adimlar li + li { border-left: 1px solid var(--cizgi); border-top: 0; }
+  .kartlar .kart:nth-child(even) { border-left: 1px solid var(--cizgi); }
+  .kartlar .kart:nth-child(n+2) { border-top: 0; }
+}
+@media (min-width: 721px) and (max-width: 900px) {
+  .canli-ozet div:nth-child(3) { border-left: 1px solid var(--cizgi); }
+  .canli-ozet div:nth-child(n+3) { border-top: 0; }
+  .adimlar li:nth-child(3) { border-left: 1px solid var(--cizgi); }
+  .adimlar li:nth-child(n+3) { border-top: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .ray-etiket { transition: none; } }
+
+/* Logo kendi yuvarlak karosunu taşır: çerçeve ve gölge eklenmez */
+.marka img, .arac-logo, .token-onizleme img, .giris-yedek { border-radius: 0; box-shadow: none; }
+/* NFT önizlemesi: 3D kart hazırsa SVG gizlenir, yoksa SVG görünür */
+.nft-onizleme { position: relative; overflow: visible; border: 0 !important; background: transparent; }
+.nft-svg, .nft-svg svg { display: block; width: 100%; height: 100%; }
+.nft-tuval { position: absolute; inset: -6%; width: 112% !important; height: 112% !important; cursor: grab; }
+.nft-onizleme.uc-boyut .nft-svg { visibility: hidden; }
