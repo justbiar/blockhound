@@ -10,8 +10,9 @@ import { mintAra, aramaMetni } from './arama.js';
 import { suzgec } from './suzgec.js';
 
 export const VARSAYILAN_AYAR = { otomatikMint: false, llmArastirma: true, sadeceAgentId: true, minSitePuan: 70, minSosyalPuan: 60, gunlukOtoMint: 3, webSonuc: 3 };
-// Otomatik mint'in ödeyebileceği en yüksek tutar: "neredeyse ücretsiz" sınırı
-export const OTO_MAX_BNB = 0.001;
+// Otomatik mint sadece gas ödenen (0 BNB) mintlerde. "Neredeyse ücretsiz" mintler (0.001 BNB'ye kadar) NFT'de de tokende de
+// zarar ettirdi (1 Kasım: 100 otomatik mintin değeri 0): onlar bildirim ve onayla yapılır
+export const OTO_MAX_BNB = 0;
 const MAKS_BAYT = 300_000;
 
 // ---------- Dış içerik ----------
@@ -238,9 +239,9 @@ export async function sosyalAjani({ sohbet, model, r, veri, webSonuc, aramaSonuc
 
 const puan = (x) => (Number.isInteger(x?.puan) ? Math.max(0, Math.min(100, x.puan)) : null);
 
-// Ücretsiz ve 0.001 BNB'ye kadar olan mintler site ve sosyal puan aranmadan otomatik mintlenir: hedeflenen Agent ID mintlerinin
+// Sadece gas ödenen (0 BNB) mintler site ve sosyal puan aranmadan otomatik mintlenir: hedeflenen Agent ID mintlerinin
 // çoğunun sitesi ya da hesabı yok. Asıl güvence zincirdedir: gönderimden önce Binance önizlemesi token izni, yetki değişikliği
-// ya da cüzdandan beklenmeyen çıkış görürse işlem gönderilmez. Kayıp en kötü ihtimalle 0.001 BNB ve gas kadardır.
+// ya da cüzdandan beklenmeyen çıkış görürse işlem gönderilmez. Kayıp en kötü ihtimalle gas kadardır.
 const GECMEME = {
   IZLE: 'henüz açılmamış ya da simülasyonda geçmiyor', TUKENDI: 'tükendi', 'ZATEN-ALDIN': 'hakkını kullanmışsın', GECERSIZ: 'simülasyonda geçmiyor',
   'MINT-YOK': 'bilinen bir mint fonksiyonu yok', 'NFT-DEGIL': 'NFT ya da token mint kontratı değil', 'AGENT-ID-DIGER': 'mint kontratı değil', 'KOD-YOK': 'kontrat yok',
@@ -261,13 +262,13 @@ export function karar({ r, site, sosyal, hakem = null, suzgec = null, ayar, bugu
     return { eylem: 'atla', sebepler: [`${hakem ? 'Hakem' : 'Sosyal araştırma'} dolandırıcılık işareti buldu`, ...isaretler.slice(0, 3).map(String)] };
   }
 
-  if (r.sonuc === 'UCRETLI') sebepler.push(`Ücretli mint (${OTO_MAX_BNB} BNB üstü): onayın gerekiyor`);
+  if (r.sonuc !== 'UCRETSIZ') sebepler.push('Ücret istiyor (otomatik mint sadece gas ödenenlerde): onayın gerekiyor');
   if (!ayar.otomatikMint) sebepler.push('Otomatik mint kapalı');
   if (ayar.sadeceAgentId !== false && !r.agentId) sebepler.push('Agent ID mint değil');
   if (!site && !sosyal && !hakem && !suzgec) sebepler.push('Araştırma yapılamadı');
   if (isaretler.length) sebepler.push(`${hakem ? 'Hakem' : 'Sosyal araştırma'} şüpheli işaret buldu`);
   if (bugunOtoMint >= ayar.gunlukOtoMint) sebepler.push(`Günlük otomatik mint sınırı doldu (${ayar.gunlukOtoMint})`);
-  return sebepler.length ? { eylem: 'onay-bekle', sebepler } : { eylem: 'otomatik-mint', sebepler: ['Ücretsiz ya da neredeyse ücretsiz, risk işareti yok'] };
+  return sebepler.length ? { eylem: 'onay-bekle', sebepler } : { eylem: 'otomatik-mint', sebepler: ['Sadece gas, risk işareti yok'] };
 }
 
 // ---------- Yönetici ----------
@@ -315,7 +316,7 @@ export class AjanYonetici extends EventEmitter {
     if (this.logDosya) { try { appendFileSync(this.logDosya, JSON.stringify(k) + '\n'); } catch { /* önemli değil */ } }
   }
 
-  // Kurallar sonradan değişebilir: kararı "onayını bekliyor" kalmış ya da hiç değerlendirilmemiş ücretsiz ve neredeyse ücretsiz
+  // Kurallar sonradan değişebilir: kararı "onayını bekliyor" kalmış ya da hiç değerlendirilmemiş ücretsiz (sadece gas)
   // adaylar yeni kurallarla yeniden değerlendirilir. Ayar değişince, açılışta ve takibin her yeniden kontrolünden sonra çalışır.
   // Ücretli, atlanmış ve mint edilmiş olanlara dokunulmaz; günlük sınır doluysa ya da LLM açıkken yeni araştırma gerekiyorsa beklenir
   bekleyenleriDegerlendir() {
@@ -323,7 +324,7 @@ export class AjanYonetici extends EventEmitter {
     if (!this.ayar.otomatikMint || this.sayac.otoMint >= this.ayar.gunlukOtoMint) return 0;
     let n = 0;
     for (const r of this.takip?.bulunanlar || []) {
-      if (!['UCRETSIZ', 'NEREDEYSE-UCRETSIZ'].includes(r.sonuc) || this.takip.mintBilgisi?.(r)) continue;
+      if (r.sonuc !== 'UCRETSIZ' || this.takip.mintBilgisi?.(r)) continue;
       if (this.ayar.sadeceAgentId !== false && !r.agentId) continue;
       const o = this.raporlar.find((x) => x.adres.toLowerCase() === r.adres.toLowerCase());
       if (o && o.karar?.eylem !== 'onay-bekle') continue;
@@ -394,8 +395,8 @@ export class AjanYonetici extends EventEmitter {
             return x.veri;
           } catch (e) { rapor.hatalar.push(`${ad} ajanı: ${e.message}`); return null; }
         };
-        // Web araması ücretli: sadece otomatik mint adayları için (Agent ID, ücretsiz ya da 0.001 BNB'ye kadar). Diğerlerinde sosyal ajan çalışmaz
-        const aday = (r.agentId || this.ayar.sadeceAgentId === false) && ['UCRETSIZ', 'NEREDEYSE-UCRETSIZ'].includes(r.sonuc);
+        // Web araması ücretli: sadece otomatik mint adayları için (Agent ID, sadece gas). Diğerlerinde sosyal ajan çalışmaz
+        const aday = (r.agentId || this.ayar.sadeceAgentId === false) && r.sonuc === 'UCRETSIZ';
         // Önce sosyal ajan: metadata'da site yoksa web aramasıyla siteyi o bulur
         // Brave anahtarı varsa arama ücretsiz yapılır ve sonuçlar ücretsiz modele metin olarak verilir; yoksa OpenRouter'ın ücretli web eklentisi
         if (aday && this.ara) {
@@ -433,8 +434,8 @@ export class AjanYonetici extends EventEmitter {
   async #otomatikMint(r) {
     try {
       const t = await this.mintIslem.hazirla({ adres: r.adres });
-      // Son kapı: otomatik yol sadece 0.001 BNB'ye kadar olan ve uyarısız (önizlemesi temiz) taslakları gönderir
-      if (!(t.bnb <= OTO_MAX_BNB) || !t.gonderilebilir) return { durum: 'gonderilmedi', sebep: t.uyarilar.join(' | ') || `Ücret ${OTO_MAX_BNB} BNB üstünde` };
+      // Son kapı: otomatik yol sadece 0 BNB'lik ve uyarısız (önizlemesi temiz) taslakları gönderir
+      if (!(t.bnb <= OTO_MAX_BNB) || !t.gonderilebilir) return { durum: 'gonderilmedi', sebep: t.uyarilar.join(' | ') || 'Ücret istiyor: otomatik mint sadece gas ödenenlerde' };
       this.sayac.otoMint++;
       this.#sayacKaydet();
       const g = await this.mintIslem.gonder({ id: t.id, onay: true, kaynak: 'otomatik' });

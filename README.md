@@ -36,8 +36,10 @@ Screenshots from the real terminal with live chain data. The wallet balance and 
 - **Free safety filter.** Before anything is sent: OKX transaction, token and site scans, impersonated brand names, and the Binance
   wallet preview as the last gate. Anything that asks for a token approval, changes authority, causes an unexpected outflow or
   delivers nothing to the wallet is dropped.
-- **Auto-mint.** Free and near-free (up to 0.001 BNB) mints that pass your rules are sent automatically within a daily cap. Pricier
-  ones are shown to you with a one-click mint flow.
+- **Auto-mint.** Only gas-only (0 BNB) mints that pass your rules are sent automatically, within a daily cap. Anything that asks
+  for BNB, even 0.001, is shown to you with a one-click mint flow and waits for your approval.
+- **Upcoming openings.** Contracts that publish an opening time (startTime, openAt and similar) get a countdown. From 5 seconds
+  before the opening the tracker re-checks them every 1.5 seconds, so a free phase is caught in its first seconds.
 - **Market-open alerts.** Tokens you hold without a price (pools not created yet) are checked periodically; you get a desktop
   notification the moment a market opens.
 - **Portfolio.** Real profit and loss from your wallet history, split into *Normal* and *Agent* (auto-minted) views, with charts,

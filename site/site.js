@@ -5,7 +5,7 @@ const EN = {
   tu_mintler: 'Mints', tu_siper: 'Launches', tu_liderler: 'Leaders', tu_ayarlar: 'Settings', m_guvenlik: 'Safety', m_rakamlar: 'Numbers', m_kur: 'Install', m_sss: 'FAQ',
   h_ust: 'BNB Chain · open-source mint agent',
   h_baslik: 'Sniffs out new mints from the first block.',
-  h_alt: 'Blockhound scans every new contract on chain, simulates its mint functions with your wallet, filters out the risky ones and mints the free ones by your rules. When a token you hold gets a market, it tells you in the first minute.',
+  h_alt: 'Blockhound scans every new contract on chain, simulates its mint functions with your wallet, filters out the risky ones and auto-mints only gas-only (0 BNB) ones by your rules; anything that costs BNB waits for you. When a token you hold gets a market, it tells you in the first minute.',
   h_cta1: 'Source on GitHub', h_cta2: 'Run it yourself',
   k_baslik: 'Run it on your own computer',
   k_alt: 'Blockhound is open source (MIT). Download it, run it with your own wallet, build on it. Your wallet and keys stay on your computer.',
@@ -19,7 +19,7 @@ const EN = {
   n1_b: 'Sniff', n1_m: 'Catches every contract deployed in each new block, including those created inside factory contracts. Recognizes contracts behind proxies and mints gated by Agent ID.',
   n2_b: 'Simulate', n2_m: 'Tries the mint functions with your wallet address without sending a transaction. Free or paid, sold out or open, eligible or not: all read straight from the chain.',
   n3_b: 'Filter', n3_m: 'Transaction, token and site security scans, impersonated brand names and, as the last gate, a wallet preview: anything that asks for approvals, delivers nothing or is a trap gets dropped.',
-  n4_b: 'Mint and alert', n4_m: 'Sends free mints that pass your rules automatically within a daily cap and asks you about pricier ones. When a token you hold gets a pool, you get a notification.',
+  n4_b: 'Mint and alert', n4_m: 'Sends gas-only (0 BNB) mints that pass your rules automatically within a daily cap; anything that asks for BNB waits for your approval. Contracts that publish an opening time get a countdown and are re-checked every 1.5 s at open. When a token you hold gets a pool, you get a notification.',
   g_baslik: 'Safety first',
   g1_b: 'On your own computer', g1_m: 'Blockhound runs on your computer. Keys and the wallet session never leave it. This site never connects to a wallet, the HOUND mint page included.',
   g2_b: 'Hard limits', g2_m: 'Per-trade and daily BNB caps, a daily auto-mint limit and a one-click emergency stop. Raising a limit takes a separate confirmation.',
@@ -81,8 +81,8 @@ dilUygula(dil);
 // Terminal turu: sekmeler görseli ve açıklamayı değiştirir. Ok tuşlarıyla sekmeler arasında gezilir
 const TUR = {
   mintler: {
-    zh: ['Mint', '每个新区块中的合约都会被扫描，并用你的钱包模拟 mint 函数。分为就绪、有风险、未通过和已结束；NFT 和代币 mint 分开显示。需要 Agent ID 的项目会带标签。', 'Blockhound Mint 界面：新 mint 合约、状态标签和 Mint 按钮'],
-    en: ['Mints', 'Contracts in every new block are scanned and their mint functions simulated with your wallet. They are sorted into ready, risky, failing and closed; NFT and token mints have separate tabs. Agent ID gated ones carry a badge.', 'Blockhound Mints screen: new mint contracts, status badges and Mint buttons'],
+    zh: ['Mint', '每个新区块中的合约都会被扫描，并用你的钱包模拟 mint 函数。分为就绪、有风险、未通过和已结束；NFT 和代币 mint 分开显示。需要 Agent ID 的项目会带标签。写明开放时间的合约会出现在“即将开放”中并显示倒计时。', 'Blockhound Mint 界面：新 mint 合约、状态标签和 Mint 按钮'],
+    en: ['Mints', 'Contracts in every new block are scanned and their mint functions simulated with your wallet. They are sorted into ready, risky, failing and closed; NFT and token mints have separate tabs. Agent ID gated ones carry a badge. Contracts that publish an opening time appear under Upcoming openings with a countdown.', 'Blockhound Mints screen: new mint contracts, status badges and Mint buttons'],
   },
   hound: {
     zh: ['HOUND', '实时追踪我们自己的代币和 NFT 系列：供应量、持有者、矿工、收入、当前难度和周期进度，全部由链上 Transfer 和 Mined 事件计算。', 'Blockhound HOUND 界面：HOUND 和 BlockHound 的供应量、持有者、矿工和难度'],

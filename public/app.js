@@ -319,7 +319,7 @@ function filtrele(t) {
   if (q && !`${t.sembol} ${t.ad} ${t.adres}`.toLowerCase().includes(q)) return false;
   const h = sayiVeyaNull('f-holder'), top = sayiVeyaNull('f-top10'), mc = sayiVeyaNull('f-mc');
   if (h != null && !(t.holder >= h)) return false;
-  if (top != null && !(t.top10 != null && t.top10 <= top)) return false;
+  if (top != null && t.zincir !== 'solana' && !(t.top10 != null && t.top10 <= top)) return false; // TARS top10 vermiyor
   if (mc != null && !(t.piyasaDegeri >= mc)) return false;
   if ($('f-devsatti').checked && t.devSatti != null && t.devSatti > 50) return false;
   return true;
@@ -333,7 +333,38 @@ const yas = (ms) => {
 };
 const yuzde = (v) => (v == null ? '?' : `%${Number(v).toFixed(v < 10 ? 1 : 0)}`);
 
+const solYaz = (v) => (v == null ? '?' : `${Number(v).toFixed(v < 10 ? 2 : 0)} SOL`);
+// TARS (Solana) kartı: sadece izleme. İşlem fişine alınmaz, linkler Solana kaşiflerine gider
+function tarsKartHtml(t) {
+  const taze = t.olusturma && Date.now() - t.olusturma < 60_000;
+  const sosyal = [['web', 'Web'], ['x', 'X'], ['telegram', 'Telegram']].filter(([k]) => t.sosyal[k])
+    .map(([k, ad]) => `<a href="${esc(t.sosyal[k])}" target="_blank" rel="noopener noreferrer">${ad}</a>`).join('');
+  const degisim = t.degisim24 == null ? '?' : `${t.degisim24 > 0 ? '+' : ''}${Number(t.degisim24).toFixed(0)}%`;
+  const rozet = t.senkron >= 3 ? `<span class="tkart-rozet" title="Aynı saniyede birden çok cüzdandan gelen alımlar">Senkron alım: ${esc(t.senkron)}</span>` : '';
+  return `<div class="tkart izleme${taze ? ' taze' : ''}">
+    <div class="tkart-ust">
+      ${t.ikon ? `<img src="${esc(t.ikon)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<div class="bos"></div>'}
+      <div class="tkart-ad"><strong>${esc(t.sembol)}</strong><span>${esc(t.ad)}</span></div>
+      <span class="tkart-yas">${esc(yas(t.olusturma))}</span>
+    </div>
+    <div class="metrik">
+      <div><small>MC</small><b>${t.piyasaDegeri != null ? `$${esc(kisaSayi(t.piyasaDegeri))}` : esc(solYaz(t.piyasaDegeriSol))}</b></div>
+      <div><small>Holder</small><b>${esc(t.holder ?? '?')}</b></div>
+      <div><small>Al / Sat</small><b>${esc(t.alim ?? '?')} / ${esc(t.satim ?? '?')}</b></div>
+      <div><small>Toplanan</small><b>${esc(t.toplananSol == null ? '?' : Number(t.toplananSol).toFixed(1))} / ${esc(t.hedefSol ?? '?')} SOL</b></div>
+      <div><small>24s hacim</small><b>${esc(solYaz(t.hacimSol))}</b></div>
+      <div><small>24s</small><b>${esc(degisim)}</b></div>
+    </div>
+    ${t.durum !== 'dex' && t.ilerleme != null ? `<div class="bar"><i data-w="${Math.min(100, Math.max(0, t.ilerleme))}"></i></div>` : ''}
+    ${rozet}
+    <div class="tkart-alt"><span class="adres">${esc(kisalt(t.adres))}</span>
+      <a href="https://solscan.io/token/${esc(t.adres)}" target="_blank" rel="noopener">Solscan</a>
+      <a href="https://tars.meme/token/${esc(t.adres)}" target="_blank" rel="noopener">tars.meme</a>${sosyal}</div>
+  </div>`;
+}
+
 function kartHtml(t) {
+  if (t.zincir === 'solana') return tarsKartHtml(t);
   const taze = t.olusturma && Date.now() - t.olusturma < 60_000;
   const secildi = form.elements.token.value.trim().toLowerCase() === t.adres.toLowerCase();
   const sosyal = [['web', 'Web'], ['x', 'X'], ['telegram', 'Telegram']].filter(([k]) => t.sosyal[k])
@@ -360,6 +391,18 @@ function kartHtml(t) {
 }
 
 let siperVeri = null, gorulen = null;
+// Kaynak: Four.meme (BSC, işlem yapılabilir) ya da TARS (Solana, sadece izleme)
+const KAYNAKLAR = {
+  four: { yol: '/api/siper', yazi: "Agent ID'ye özel Four.meme lansmanları · Binance Web3 resmi listesi" },
+  tars: { yol: '/api/siper/tars', yazi: "Agent ID'ye özel TARS lansmanları · Solana · tars.meme herkese açık API" },
+};
+let siperKaynak = KAYNAKLAR[depoOku('siper-kaynak', 'four')] ? depoOku('siper-kaynak', 'four') : 'four';
+const gorulenKaynak = {};
+function kaynakUygula() {
+  for (const r of document.querySelectorAll('input[name=siper-kaynak]')) r.checked = r.value === siperKaynak;
+  $('siper-kaynak-yazi').textContent = KAYNAKLAR[siperKaynak].yazi;
+  $('siper-tars-not').hidden = siperKaynak !== 'tars';
+}
 const sonHtml = {};
 const tumTokenler = () => (siperVeri ? [...siperVeri.yeni, ...siperVeri.bitmekUzere, ...siperVeri.dex] : []);
 function siperCiz() {
@@ -387,17 +430,34 @@ function bip() {
 }
 
 async function siperYenile() {
-  const d = await api('/api/siper').catch((e) => ({ hata: e.message }));
+  const kaynak = siperKaynak;
+  const d = await api(KAYNAKLAR[kaynak].yol).catch((e) => ({ hata: e.message }));
+  if (kaynak !== siperKaynak) return; // istek sürerken kaynak değişti
+  gorulen = gorulenKaynak[kaynak] ?? null;
   if (d.hata) { $('siper-durum').innerHTML = `<span class="hata">${esc(d.hata)}</span>`; return; }
   const yeniler = (d.yeni || []).map((t) => t.adres);
   if (gorulen && $('f-ses').checked && yeniler.some((a) => !gorulen.has(a) && filtrele(d.yeni.find((t) => t.adres === a)))) bip();
   gorulen = new Set([...(gorulen || []), ...yeniler]);
+  gorulenKaynak[kaynak] = gorulen;
   siperVeri = d;
   const s = d.durum;
   $('siper-durum').innerHTML = s.sonHata ? `<span class="hata">Tarama hatası: ${esc(s.sonHata)}</span>`
     : s.sonBasari ? `güncellendi ${esc(new Date(s.sonBasari).toLocaleTimeString(YEREL))}` : 'taranıyor…';
   siperCiz();
 }
+
+for (const r of document.querySelectorAll('input[name=siper-kaynak]')) {
+  r.addEventListener('change', () => {
+    siperKaynak = r.value;
+    depoYaz('siper-kaynak', siperKaynak);
+    siperVeri = null;
+    for (const k of Object.keys(sonHtml)) delete sonHtml[k];
+    for (const k of ['yeni', 'bitmekUzere', 'dex']) { $(`s-${k}`).innerHTML = '<p class="soluk">Yükleniyor…</p>'; $(`say-${k}`).textContent = ''; }
+    kaynakUygula();
+    siperYenile();
+  });
+}
+kaynakUygula();
 
 $('siper-kart').addEventListener('click', (e) => {
   if (e.target.closest('a')) return;   // linkler kartı seçmesin
@@ -502,7 +562,7 @@ function agentCiz(a) {
     <td class="soluk">${s.gasBnb != null ? esc(s.gasBnb.toFixed(5)) : '?'}</td>
     <td>${s.gelen.some((g) => g.degerUsd != null) ? esc(usd(s.gelen.reduce((t, g) => t + (g.degerUsd || 0), 0))) : '<span class="soluk">fiyat yok</span>'}</td>
     <td>${s.txHash ? `<a href="https://bscscan.com/tx/${esc(s.txHash)}" target="_blank" rel="noopener noreferrer">BscScan</a>` : esc(s.durum)}</td>
-  </tr>`).join('') : '<tr><td colspan="7" class="soluk">Henüz otomatik mint yok. Mintler sekmesindeki Ajanlar kartından otomatik mint açıkken kurallara uyan ücretsiz ve 0.001 BNB\'ye kadar mintler burada birikir.</td></tr>';
+  </tr>`).join('') : '<tr><td colspan="7" class="soluk">Henüz otomatik mint yok. Mintler sekmesindeki Ajanlar kartından otomatik mint açıkken kurallara uyan, sadece gas ödenen mintler burada birikir.</td></tr>';
 }
 
 // ---------- Maliyet paneli: OpenRouter kullanımı ve yerel çağrı defteri ----------
@@ -1075,6 +1135,28 @@ const MINT_SONUC = {
   TUKENDI: ['Tükendi', ''], 'ZATEN-ALDIN': ['Zaten aldın', ''], 'AGENT-ID-DIGER': ['NFT değil', ''], 'NFT-DEGIL': ['NFT değil', ''],
   'MINT-YOK': ['Mint yok', ''], 'KOD-YOK': ['Kontrat yok', ''], GECERSIZ: ['Geçmiyor', ''],
 };
+// Açılışa kalan süre: "45 sn", "12 dk", "2 sa 10 dk"; geçtiyse "açıldı"
+const kalanSure = (ms) => {
+  const s = Math.round((ms - Date.now()) / 1000);
+  if (s <= 0) return 'açıldı';
+  if (s < 60) return `${s} sn`;
+  const dk = Math.floor(s / 60);
+  if (dk < 60) return `${dk} dk`;
+  return dk % 60 ? `${Math.floor(dk / 60)} sa ${dk % 60} dk` : `${dk / 60} sa`;
+};
+setInterval(() => { for (const e of document.querySelectorAll('[data-acilis]')) e.textContent = kalanSure(Number(e.dataset.acilis)); }, 1000);
+const zamanRozet = (r) => (r.acilis > Date.now()
+  ? ` <span class="mint-rozet izle kucuk" title="Kontratın yazdığı açılış saati">Açılış <span data-acilis="${esc(r.acilis)}">${esc(kalanSure(r.acilis))}</span></span>`
+  : r.ikiFaz ? ' <span class="mint-rozet izle kucuk" title="Ücretli yol açık, bedava yol henüz açılmadı">Bedava faz bekleniyor</span>' : '');
+
+function zamanliCiz(liste = []) {
+  $('mint-zamanli').hidden = !liste.length;
+  $('mint-zamanli-liste').innerHTML = liste.map((z) => `<li>
+    <span>${z.ad ? esc(z.ad) : '<span class="soluk">Adsız</span>'} <a class="adres" href="https://bscscan.com/address/${esc(z.adres)}" target="_blank" rel="noopener noreferrer">${esc(z.adres.slice(0, 6))}…${esc(z.adres.slice(-4))}</a></span>
+    <span>${esc(new Date(z.acilis).toLocaleTimeString(YEREL, { hour: '2-digit', minute: '2-digit' }))} · <b data-acilis="${esc(z.acilis)}">${esc(kalanSure(z.acilis))}</b></span>
+  </li>`).join('');
+}
+
 const weiBnb = (w) => (w == null ? null : Number(BigInt(w)) / 1e18);
 const bnbKisa = (v) => (v == null ? '?' : v === 0 ? '0 BNB' : `${v.toLocaleString(YEREL, { maximumFractionDigits: 6 })} BNB`);
 
@@ -1107,7 +1189,7 @@ function mintSatir(r) {
   };
   const ilerleme = r.basilan != null || r.maks != null ? `${esc(adet(r.basilan))} / ${esc(adet(r.maks))}` : '<span class="soluk">?</span>';
   const ozet = `<tr data-capa="m-${esc(r.adres)}" class="mint-ozet${acik ? ' acik' : ''}">
-    <td>${rozet}${r.agentId ? ' <span class="mint-rozet agent kucuk">Agent ID</span>' : ''}</td>
+    <td>${rozet}${r.agentId ? ' <span class="mint-rozet agent kucuk">Agent ID</span>' : ''}${zamanRozet(r)}</td>
     <td>${ad}${r.tur === 'token' ? ' <span class="mint-rozet agent kucuk">Token</span>' : ''}${r.kasa ? ' <span class="mint-rozet ucretsiz kucuk" title="Vergi gelirini kart sahiplerine dağıtan kasa kartı">Kasa</span>' : ''}${kisaNeden}</td>
     <td>${ucret}</td>
     <td>${ilerleme}</td>
@@ -1231,11 +1313,12 @@ async function mintlerYenile() {
   const u = d.durum;
   $('mint-durum').innerHTML = u.sonHata
     ? `<span class="hata">${esc(u.sonHata)}</span>`
-    : `${u.calisiyor ? 'çalışıyor' : 'durdu'} · son blok ${esc(u.sonBlok ?? '?')} · ${esc(sayiYaz(u.taranan, 0))} blok, ${esc(sayiYaz(u.kontrat, 0))} yeni kontrat tarandı${u.fabrika ? ` (${esc(sayiYaz(u.fabrika, 0))} fabrikadan)` : ''} · ${d.izleme.length} izleniyor`;
+    : `${u.calisiyor ? 'çalışıyor' : 'durdu'} · son blok ${esc(u.sonBlok ?? '?')} · ${esc(sayiYaz(u.taranan, 0))} blok, ${esc(sayiYaz(u.kontrat, 0))} yeni kontrat tarandı${u.fabrika ? ` (${esc(sayiYaz(u.fabrika, 0))} fabrikadan)` : ''} · ${d.izleme.length} izleniyor${d.zamanli?.length ? ` · ${d.zamanli.length} zamanlı` : ''}`;
   const ucretsizler = d.bulunanlar.filter((r) => !r.mintEdildi && (r.sonuc === 'UCRETSIZ' || r.sonuc === 'NEREDEYSE-UCRETSIZ') && (!bildirimAyar?.sadeceAgentId || r.agentId)).map((r) => `${r.adres}:${r.sonuc}`);
   if (mintGorulen && $('mint-ses').checked && ucretsizler.some((k) => !mintGorulen.has(k))) bip();
   mintGorulen = new Set(ucretsizler);
   if (document.querySelector('section[data-gorunum=mintler]').hidden) return;
+  zamanliCiz(d.zamanli);
   mintSon = d.bulunanlar;
   mintListeCiz();
 }
@@ -1827,7 +1910,7 @@ async function houndYenile(yenile = false) {
   const d = await api(`/api/hound${yenile ? '?yenile=1' : ''}`).catch((e) => ({ hata: e.message }));
   if (no !== houndIstek) return;
   if (d.hata) { $('hound-durum').innerHTML = `<span class="hata">${esc(d.hata)}</span>`; return; }
-  $('hound-durum').textContent = `blok ${sayiYaz(d.sonBlok, 0)} · güncellendi ${new Date(d.guncelleme).toLocaleTimeString(YEREL)}`;
+  $('hound-durum').textContent = `blok ${sayiYaz(d.sonBlok, 0)} · güncellendi ${new Date(d.guncelleme).toLocaleTimeString(YEREL)}${d.olayHatasi ? ' · yeni bloklar okunamadı, tekrar denenecek' : ''}`;
   const gelir = d.hound.gelirBnb + d.blockhound.gelirBnb;
   const bekleyen = (d.hound.bekleyenBnb || 0) + (d.blockhound.bekleyenBnb || 0);
   const usd = (b) => (d.bnbUsd && b != null ? ` · $${(b * d.bnbUsd).toFixed(2)}` : '');

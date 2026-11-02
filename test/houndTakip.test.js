@@ -60,3 +60,21 @@ test('olaylardan sahip, madenci ve gelir hesaplanır; aralık reddedilirse parç
   assert.equal(istenen.length, 0);
   assert.equal(o2.hound.madenciler[0].mint, 2);
 });
+
+test('takılan RPC özeti bekletmez: zaman aşımında eski verilerle özet döner ve hata yazılır', async () => {
+  const asili = () => new Promise(() => {});
+  const provider = {
+    getBlockNumber: async () => 140,
+    send: asili,
+    call: asili,
+    getBalance: asili,
+    getBlock: asili,
+  };
+  const t = new HoundTakip({ provider, kurulumBlogu: 100, parca: 80, enKucukParca: 10, sureMs: 50 });
+  const bas = Date.now();
+  const o = await t.ozet();
+  assert.ok(Date.now() - bas < 2000, 'özet zaman aşımıyla sınırlı kalmalı');
+  assert.equal(o.olayHatasi, 'RPC zaman aşımı');
+  assert.equal(o.sonBlok, 99);
+  assert.equal(o.hound.basilan, 0);
+});

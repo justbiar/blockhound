@@ -33,6 +33,7 @@ import { MaliyetTakibi } from './maliyet.js';
 import { PiyasaIzleme } from './piyasaIzleme.js';
 import { kasaAnaliz } from './kasaKart.js';
 import { HoundTakip } from './houndTakip.js';
+import { TarsTakip } from './tarsTakip.js';
 import { Bildirimler, mintBildirimi } from './bildirim.js';
 import { mintKayitlari, agentKontratlari, agentPortfoy } from './agentPortfoy.js';
 import { UygulamaAyarlari, ALANLAR, envOku } from './ayarlar.js';
@@ -40,6 +41,9 @@ import { spawn } from 'node:child_process';
 
 const tarayici = new Tarayici({ aralikMs: Number(process.env.TARAMA_ARALIK_MS || 5000) });
 tarayici.baslat();
+// Solana'daki TARS launchpad'i: Siper'de ikinci kaynak, sadece okuma
+const tarsTakip = new TarsTakip({ aralikMs: Number(process.env.TARS_ARALIK_MS || 15_000) });
+tarsTakip.baslat();
 
 const trader = new Trader({
   baw, canli: C.CANLI_ISLEM, islemBasiMax: C.ISLEM_BASI_MAX_BNB, gunlukMax: C.GUNLUK_MAX_BNB, varsayilanKayma: C.VARSAYILAN_KAYMA,
@@ -100,9 +104,11 @@ otomasyon.baslat();
 
 // Ücretsiz mint takibi: sadece okur, mintleri cüzdan adresiyle simüle eder
 const mintProvider = new JsonRpcProvider(C.BSC_RPC, 56, { staticNetwork: true, batchMaxCount: 1 });
+const rpcListe = (liste) => liste.split(',').map((u) => u.trim()).filter(Boolean).map((u) => new JsonRpcProvider(u, 56, { staticNetwork: true, batchMaxCount: 1 }));
+const blokProvider = rpcListe(C.BSC_BLOK_RPC);
 const olayProvider = C.BSC_OLAY_RPC.split(',').map((u) => u.trim()).filter(Boolean).map((u) => new JsonRpcProvider(u, 56, { staticNetwork: true, batchMaxCount: 1 }));
 const mintTakip = new MintTakip({
-  provider: mintProvider, olayProvider, cuzdanAdresi: () => baw.adres(), dosya: C.dataFile('mint-takip.json'),
+  provider: mintProvider, olayProvider, blokProvider, cuzdanAdresi: () => baw.adres(), dosya: C.dataFile('mint-takip.json'),
   bildir: (r) => { const b = mintBildirimi(r); bildirimler.bildir(b.kategori, b.baslik, b.govde, { agentId: b.agentId }); },
 });
 mintTakip.baslat();
@@ -211,6 +217,9 @@ async function tokenPiyasa(t) {
 // HOUND / BlockHound takibi: istek geldikçe güncellenir, aynı anda tek okuma yapılır
 const houndTakip = new HoundTakip({ provider: mintProvider, dosya: C.dataFile('hound-takip.json'), cuzdanAdresi: () => mintTakip.cuzdan(), tokenPiyasa });
 let houndIstek = null;
+const houndGuncelle = () => (houndIstek ||= houndTakip.ozet().catch(() => houndTakip.son).finally(() => { houndIstek = null; }));
+houndGuncelle();
+setInterval(houndGuncelle, 60_000).unref();
 const rotalar = {
   'GET /api/durum': async () => ({
     mod: C.MOD, canliIslem: C.CANLI_ISLEM,
@@ -244,6 +253,7 @@ const rotalar = {
   'POST /api/giris/iptal': async () => { if (giris?.durum === 'bekliyor') { giris.cocuk?.kill(); giris.durum = 'hata'; giris.hata = 'İptal edildi'; } return girisOzet(); },
 
   'GET /api/siper': async () => ({ durum: tarayici.durum, ...tarayici.listeler }),
+  'GET /api/siper/tars': async () => ({ durum: tarsTakip.durum, solUsd: tarsTakip.solUsd, ...tarsTakip.listeler }),
 
   'POST /api/teklif': async (b) => islem.teklif({ yon: b.yon, token: b.token, miktar: b.miktar, kayma: b.kayma }),
 
@@ -338,10 +348,11 @@ const rotalar = {
     kasaOnbellek.set(k, { at: Date.now(), v });
     return v;
   },
+  // Önce son özet döner, eskiyse güncelleme arka planda başlar: zincir okuması yavaşken sayfa beklemez
   'GET /api/hound': async (_b, u) => {
-    if (houndTakip.son && !houndIstek && Date.now() - houndTakip.son.guncelleme < 30_000 && u?.searchParams.get('yenile') !== '1') return houndTakip.son;
-    houndIstek ||= houndTakip.ozet().finally(() => { houndIstek = null; });
-    return houndIstek;
+    const eski = !houndTakip.son || Date.now() - houndTakip.son.guncelleme > 30_000 || u?.searchParams.get('yenile') === '1';
+    if (eski) houndGuncelle();
+    return houndTakip.son || houndIstek;
   },
   'GET /api/piyasa-izleme': async () => ({ liste: piyasaIzleme.liste(), calisiyor: piyasaIzleme.calisiyor, aralikDk: piyasaIzleme.aralikMs / 60_000 }),
   'POST /api/piyasa-izleme/kontrol': async () => ({ acilanlar: await piyasaIzleme.tur(), liste: piyasaIzleme.liste() }),
@@ -388,7 +399,7 @@ const rotalar = {
       mintTakip.kayitEkle({ ...r, blok: eski.blok });
       if (mintTakip.izleme[k]) mintTakip.izleme[k].sonuc = r.sonuc;
       mintTakip.kaydet();
-    }
+    } else if (mintTakip.zamanliGuncelle(r)) mintTakip.kaydet(); // açılışı gelecekte: zamanlı kuyruğa girer
     return { ...r, mintEdildi: mintTakip.mintBilgisi(r) };
   },
   'POST /api/mintler/hazirla': async (b) => mintIslem.hazirla({ adres: String(b.adres || '').trim(), bnb: b.bnb ?? null }),

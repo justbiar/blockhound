@@ -282,7 +282,7 @@ keccak256(abi.encodePacked(challenge(), msg.sender, nonce)) &lt;= type(uint256).
       <div>
         <p class="ust-yazi" data-i18n="ar_ust">Blockhound 终端</p>
         <h2 data-i18n="ar_baslik">HOUND 背后的工具：从第一个区块嗅出新 mint。</h2>
-        <p class="alt" data-i18n="h_alt">Blockhound 扫描链上每一个新合约，用你的钱包地址模拟 mint 函数，过滤掉有风险的项目，并按你的规则自动 mint 免费项目。你持有的代币一开盘，第一分钟就会通知你。</p>
+        <p class="alt" data-i18n="h_alt">Blockhound 扫描链上每一个新合约，用你的钱包地址模拟 mint 函数，过滤掉有风险的项目，只有仅需 gas（0 BNB）的项目才会按你的规则自动 mint，需要支付 BNB 的都会先问你。你持有的代币一开盘，第一分钟就会通知你。</p>
         <div class="cta">
           <a class="dugme ana" href="https://github.com/justbiar/blockhound" rel="noopener" data-i18n="h_cta1">GitHub 源代码</a>
           <a class="dugme" href="#kur" data-i18n="h_cta2">在自己电脑上运行</a>
@@ -297,7 +297,7 @@ keccak256(abi.encodePacked(challenge(), msg.sender, nonce)) &lt;= type(uint256).
         <li><span class="adim-no">01</span><h3 data-i18n="n1_b">嗅探</h3><p data-i18n="n1_m">捕获每个新区块中部署的合约，包括工厂合约内部创建的合约。也能识别代理合约背后的实现和需要 Agent ID 的 mint。</p></li>
         <li><span class="adim-no">02</span><h3 data-i18n="n2_b">模拟</h3><p data-i18n="n2_m">用你的钱包地址尝试 mint 函数，不发送真实交易。是否免费、费用多少、是否已售罄、你是否有资格：全部直接从链上读取。</p></li>
         <li><span class="adim-no">03</span><h3 data-i18n="n3_b">过滤</h3><p data-i18n="n3_m">交易、代币和网站安全扫描，冒充品牌名称检测，最后一道关是钱包预览：要求授权、不带来资产或是陷阱的项目都会被过滤。</p></li>
-        <li><span class="adim-no">04</span><h3 data-i18n="n4_b">mint 并通知</h3><p data-i18n="n4_m">通过你规则的免费 mint 会在每日上限内自动发送，较贵的会先问你。你持有的代币一建池就会收到通知。</p></li>
+        <li><span class="adim-no">04</span><h3 data-i18n="n4_b">mint 并通知</h3><p data-i18n="n4_m">只需 gas（0 BNB）且通过你规则的 mint 会在每日上限内自动发送；任何需要支付 BNB 的 mint 都要你确认。合约写明开放时间的，会显示倒计时，开放时每 1.5 秒复查一次。你持有的代币一建池就会收到通知。</p></li>
       </ol>
     </section>
 
@@ -316,7 +316,7 @@ keccak256(abi.encodePacked(challenge(), msg.sender, nonce)) &lt;= type(uint256).
         <div class="tur-cerceve"><img id="tur-gorsel" src="img/en/mintler.jpg" width="1440" height="1000" alt="Blockhound Mint 界面：新 mint 合约、状态标签和 Mint 按钮"></div>
         <figcaption>
           <h3 id="tur-baslik">Mint</h3>
-          <p id="tur-metin">每个新区块中的合约都会被扫描，并用你的钱包模拟 mint 函数。分为就绪、有风险、未通过和已结束；NFT 和代币 mint 分开显示。需要 Agent ID 的项目会带标签。</p>
+          <p id="tur-metin">每个新区块中的合约都会被扫描，并用你的钱包模拟 mint 函数。分为就绪、有风险、未通过和已结束；NFT 和代币 mint 分开显示。需要 Agent ID 的项目会带标签。写明开放时间的合约会出现在“即将开放”中并显示倒计时。</p>
         </figcaption>
       </figure>
     </section>

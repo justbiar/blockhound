@@ -25,10 +25,24 @@ const OKU = new Interface([
 ]);
 const SIFIR = '0x0000000000000000000000000000000000000000';
 const adresKonu = (t) => getAddress('0x' + t.slice(26));
+const ZAMAN_ASIMI = 'RPC zaman aşımı';
+
+// Hız sınırına takılan RPC'de ethers isteği dakikalarca yeniden dener. Her çağrı süreyle sınırlanır ki özet takılmasın
+function sureli(p, ms) {
+  let t;
+  return Promise.race([p, new Promise((_, red) => { t = setTimeout(() => red(new Error(ZAMAN_ASIMI)), ms); })]).finally(() => clearTimeout(t));
+}
+const sureliProvider = (p, ms) => new Proxy(p, {
+  get(h, k) {
+    const v = h[k];
+    if (typeof v !== 'function') return v;
+    return (...a) => { const r = v.apply(h, a); return r && typeof r.then === 'function' ? sureli(r, ms) : r; };
+  },
+});
 
 export class HoundTakip {
-  constructor({ provider, dosya = null, cuzdanAdresi = async () => null, tokenPiyasa = null, parca = 5000, enKucukParca = 200, kontratlar = HOUND_KONTRATLAR, kurulumBlogu = HOUND_KURULUM_BLOGU }) {
-    Object.assign(this, { provider, dosya, cuzdanAdresi, tokenPiyasa, parca, enKucukParca, kontratlar, kurulumBlogu });
+  constructor({ provider, dosya = null, cuzdanAdresi = async () => null, tokenPiyasa = null, parca = 5000, enKucukParca = 200, kontratlar = HOUND_KONTRATLAR, kurulumBlogu = HOUND_KURULUM_BLOGU, sureMs = 15_000 }) {
+    Object.assign(this, { provider: sureliProvider(provider, sureMs), dosya, cuzdanAdresi, tokenPiyasa, parca, enKucukParca, kontratlar, kurulumBlogu });
     this.d = { sonBlok: kurulumBlogu - 1, mintler: [], bakiyeler: {}, sahipler: {}, blokZaman: {}, adlar: {} };
     this.gorseller = {};
     this.son = null;
@@ -62,7 +76,8 @@ export class HoundTakip {
       try {
         loglar = await this.provider.send('eth_getLogs', [{ fromBlock: toQuantity(bas), toBlock: toQuantity(son), address: adresler, topics: [[T.transfer, T.mined]] }]);
       } catch (e) {
-        if (parca <= this.enKucukParca) throw e;
+        // Zaman aşımı aralık büyüklüğünden değil RPC'nin sınırından gelir: küçültmek yalnızca bekleme süresini katlar
+        if (parca <= this.enKucukParca || e.message === ZAMAN_ASIMI) { this.kaydet(); throw e; }
         parca = Math.max(this.enKucukParca, Math.floor(parca / 2));
         continue;
       }
@@ -175,7 +190,8 @@ export class HoundTakip {
   }
 
   async ozet() {
-    await this.olaylariOku();
+    // Yeni olaylar okunamazsa son okunan bloğa kadarki verilerle özet yine çıkar; hata özete yazılır
+    const olayHatasi = await this.olaylariOku().then(() => null, (e) => e.shortMessage || e.message);
     const [cuzdan, fiyat, kasaWei] = await Promise.all([
       this.cuzdanAdresi().catch(() => null), this.oku(BNB_USD, 'latestRoundData'), this.provider.getBalance(HOUND_KASA).catch(() => null),
     ]);
@@ -184,7 +200,7 @@ export class HoundTakip {
     const piyasa = this.tokenPiyasa ? await this.tokenPiyasa(this.kontratlar.hound.adres).catch(() => null) : null;
     this.kaydet();
     this.son = {
-      guncelleme: Date.now(), sonBlok: this.d.sonBlok, bnbUsd, cuzdan,
+      guncelleme: Date.now(), sonBlok: this.d.sonBlok, olayHatasi, bnbUsd, cuzdan,
       kasa: { adres: HOUND_KASA, bnb: kasaWei == null ? null : Number(formatEther(kasaWei)) },
       hound: { ...hound, piyasa }, blockhound,
     };

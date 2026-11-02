@@ -168,6 +168,7 @@ async function yenile() {
   if (calisiyor) return;
   calisiyor = true;
   await anlikYukle();
+  ciz(); // anlık görüntü zincir okuması bitmeden gösterilir
   $('#kayit-yenile').disabled = true;
   try { await tara(); ciz(); } catch { $('#kayit-durum').textContent = t().hata; } finally { calisiyor = false; $('#kayit-yenile').disabled = false; }
 }

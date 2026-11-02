@@ -37,6 +37,8 @@ export const VARSAYILAN_KAYMA = num('VARSAYILAN_KAYMA', 10);   // yüzde
 export const BASIM_ONALIM_MAX_BNB = num('BASIM_ONALIM_MAX_BNB', 0.02);
 export const BASIM_UCRET_MAX_BNB = num('BASIM_UCRET_MAX_BNB', 0.01);
 export const BSC_RPC = env('BSC_RPC', 'https://bsc-rpc.publicnode.com');
+// Yeni blok taraması için RPC havuzu, virgülle. İstekler sırayla dağıtılır, hata veren RPC'de sıradakine geçilir
+export const BSC_BLOK_RPC = env('BSC_BLOK_RPC', 'https://bsc-dataseed1.defibit.io,https://bsc-dataseed2.defibit.io,https://bsc-dataseed3.defibit.io,https://bsc-dataseed4.defibit.io,https://bsc-dataseed1.ninicoin.io,https://bsc-dataseed2.ninicoin.io,https://bsc-dataseed4.ninicoin.io');
 // Adres belirtmeden olay sorgusuna (eth_getLogs) izin veren RPC'ler, virgülle: fabrika içinden kurulan kontratları bulmak için.
 // Biri hız sınırına takılırsa sıradakine geçilir. Boşsa kapalı
 export const BSC_OLAY_RPC = env('BSC_OLAY_RPC', 'https://bsc.drpc.org,https://1rpc.io/bnb');

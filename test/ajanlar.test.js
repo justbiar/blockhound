@@ -33,10 +33,10 @@ test('X hesapları ve data URI metadata', () => {
   assert.equal(j.external_url, 'https://a.xyz');
 });
 
-test('karar: ücretsiz ve neredeyse ücretsiz Agent ID mint, site ve sosyal puan düşük olsa da otomatik', () => {
+test('karar: sadece gas ödenen Agent ID mint, site ve sosyal puan düşük olsa da otomatik; neredeyse ücretsiz onaya kalır', () => {
   const zayif = { site: { ...iyiSite, puan: 20, resmiSiteGibi: false }, sosyal: { ...iyiSosyal, puan: 10 }, ayar: acik, bugunOtoMint: 0 };
   assert.equal(karar({ r: ucretsiz, ...zayif }).eylem, 'otomatik-mint');
-  assert.equal(karar({ r: { ...ucretsiz, sonuc: 'NEREDEYSE-UCRETSIZ' }, ...zayif }).eylem, 'otomatik-mint');
+  assert.equal(karar({ r: { ...ucretsiz, sonuc: 'NEREDEYSE-UCRETSIZ' }, ...zayif }).eylem, 'onay-bekle');
 });
 
 test('karar: 0.001 BNB üstü mint asla otomatik değil', () => {
@@ -159,12 +159,12 @@ test('yönetici: site cüzdan izni istiyorsa ücretsiz olsa da atlanır', async 
   assert.equal(gonderilen.length, 0);
 });
 
-test('yönetici: 0.0008 BNB lik temiz taslak otomatik gönderilir', async () => {
+test('yönetici: taslak gönderim anında ücret isterse (0.0008 BNB) otomatik gönderilmez', async () => {
   const { y, gonderilen } = sahteYonetici({ sohbetCevap: { site_raporu: iyiSite, sosyal_rapor: iyiSosyal }, taslak: { id: 't2', bnb: 0.0008, gonderilebilir: true, uyarilar: [] } });
   y.ayar = acik;
   const r = await y.arastir(ADR);
-  assert.equal(r.mint.durum, 'gonderildi');
-  assert.equal(gonderilen.length, 1);
+  assert.equal(r.mint.durum, 'gonderilmedi');
+  assert.equal(gonderilen.length, 0);
 });
 
 test('anahtar: durum çıktısında anahtarın kendisi yok', () => {
@@ -291,7 +291,8 @@ test('yönetici: eski kuralla "onay bekle" kalan ücretsiz adaylar yeniden değe
   const B = '0x' + 'b'.repeat(40), C2 = '0x' + 'c'.repeat(40), D = '0x' + 'd'.repeat(40), E = '0x' + 'e'.repeat(40);
   y.takip.bulunanlar = [
     { adres: ADR, sonuc: 'UCRETSIZ', agentId: true }, // onay-bekle: yeniden
-    { adres: B, sonuc: 'NEREDEYSE-UCRETSIZ', agentId: false }, // rapor yok: yeniden
+    { adres: B, sonuc: 'UCRETSIZ', agentId: false }, // rapor yok: yeniden
+    { adres: '0x' + 'f'.repeat(40), sonuc: 'NEREDEYSE-UCRETSIZ', agentId: true }, // ücret istiyor: otomatik değil, dokunma
     { adres: C2, sonuc: 'UCRETLI', agentId: true }, // ücretli: dokunma
     { adres: D, sonuc: 'UCRETSIZ', agentId: true, bendeki: 1 }, // mint edilmiş
     { adres: E, sonuc: 'UCRETSIZ', agentId: true }, // atlanmış

@@ -76,8 +76,12 @@
         <div class="bolum-bas">
           <div>
             <h1>Siper</h1>
-            <p class="alt">Agent ID'ye özel Four.meme lansmanları · Binance Web3 resmi listesi · <span id="siper-durum"></span></p>
+            <p class="alt"><span id="siper-kaynak-yazi">Agent ID'ye özel Four.meme lansmanları · Binance Web3 resmi listesi</span> · <span id="siper-durum"></span></p>
           </div>
+        </div>
+        <div class="sekme siper-kaynak" role="radiogroup" aria-label="Lansman kaynağı" id="siper-kaynak">
+          <label><input type="radio" name="siper-kaynak" value="four" checked><span>Four.meme <small>BSC</small></span></label>
+          <label><input type="radio" name="siper-kaynak" value="tars"><span>TARS <small>Solana</small></span></label>
         </div>
         <div class="filtreler">
           <input id="f-ara" placeholder="Sembol, ad ya da adres ara" autocomplete="off">
@@ -93,6 +97,7 @@
           <div class="sutun"><h3>DEX'te <span id="say-dex"></span></h3><div id="s-dex" class="liste"></div></div>
         </div>
         <p class="not">Boş alan "bilinmiyor" demektir, sıfır değil. Bonding curve aşamasında bu tokenleri sadece Agent ID sahipleri alıp satabilir.</p>
+        <p class="not" id="siper-tars-not" hidden>TARS Solana'da çalışır: kartlar sadece izleme içindir, terminal bu tokenlerde işlem yapmaz. "Senkron" aynı saniyede birden çok cüzdandan gelen alımların sayısıdır; tek elden yönetilen cüzdanların ya da botun işareti olabilir.</p>
       </section>
 
       <!-- PORTFÖY -->
@@ -329,6 +334,12 @@
           <div class="modal-kutu" id="mint-taslak"></div>
         </div>
         <div class="kart" id="mint-kontrol-sonuc" hidden></div>
+        <!-- Açılış saati bilinen mintler: bedava faz açılınca takip birkaç saniyede bir yeniden dener -->
+        <div class="kart mint-zamanli" id="mint-zamanli" hidden>
+          <h3>Yaklaşan açılışlar</h3>
+          <p class="not">Kontratın yazdığı açılış saatinde takip birkaç saniyede bir yeniden kontrol eder. Açılınca otomatik mint kuralların uygulanır.</p>
+          <ul id="mint-zamanli-liste"></ul>
+        </div>
         <!-- Kasa kartı analizi: temettü kasası kartlarında mint, pazar ve temettü hesabı -->
         <div class="modal" id="kasa-modal" hidden role="dialog" aria-modal="true" aria-label="Kasa kartı analizi">
           <div class="modal-kutu kasa-kutu" id="kasa-icerik"></div>
@@ -372,7 +383,7 @@
           </div>
           <details class="katlanir" id="ajan-ayar-kat">
             <summary>Ayarlar ve anahtarlar</summary>
-          <p class="alt">Site ajanı mint sitesini ve kodunu, sosyal ajan X hesabını ve taklit işaretlerini inceler. İkisi de sadece puan verir. Karar ve gönderim kural tabanlı koddadır: otomatik mint ücretsiz ve 0.001 BNB'ye kadar olan mintlerde, risk işareti yoksa ve Binance önizlemesi temizse (token izni, yetki değişikliği ya da beklenmeyen çıkış yoksa) yapılır. Daha pahalı mintler için bildirim gelir, sen onaylarsın. Otomatik mintlenenler Portföy'ün Agent bölümünde görünür.</p>
+          <p class="alt">Site ajanı mint sitesini ve kodunu, sosyal ajan X hesabını ve taklit işaretlerini inceler. İkisi de sadece puan verir. Karar ve gönderim kural tabanlı koddadır: otomatik mint sadece gas ödenen (0 BNB) mintlerde, risk işareti yoksa ve Binance önizlemesi temizse (token izni, yetki değişikliği ya da beklenmeyen çıkış yoksa) yapılır. Ücret isteyen mintler için bildirim gelir, sen onaylarsın. Otomatik mintlenenler Portföy'ün Agent bölümünde görünür.</p>
           <form id="ajan-anahtar-form" class="filtreler" autocomplete="off">
             <input type="password" id="ajan-anahtar" class="mono" placeholder="OpenRouter API anahtarı: sk-or-…" autocomplete="off" spellcheck="false">
             <button type="submit" class="dugme ana">Anahtarı kaydet</button>
@@ -387,14 +398,14 @@
           </form>
           <p class="not">Brave anahtarı olunca sosyal ajanın web araması ücretsiz yapılır (Brave her ay 5 $ ücretsiz kredi veriyor: yaklaşık 1.000 arama; ödemeli bakiye yüklemezsen kota bitince ücret kesilmez, arama durur). Anahtar yoksa arama OpenRouter üzerinden ücretli yapılır ya da "Web arama sonucu" 0 ise hiç yapılmaz. Anahtarı api-dashboard.search.brave.com adresinden Search planıyla alabilirsin.</p>
           <form id="ajan-form" class="alan-izgara" autocomplete="off">
-            <label class="secim genis"><input type="checkbox" name="otomatikMint"> Ücretsiz ve 0.001 BNB'ye kadar mintleri otomatik yap</label>
+            <label class="secim genis"><input type="checkbox" name="otomatikMint"> Sadece gas ödenen (0 BNB) mintleri otomatik yap</label>
             <label class="secim genis"><input type="checkbox" name="sadeceAgentId"> Sadece Agent ID mintlerini otomatik yap</label>
             <label class="secim genis" title="Kapalıyken OpenRouter hiç kullanılmaz: karar ücretsiz süzgeçle (OKX işlem, token ve site taramaları, site kodu, taklit adı) ve Binance önizlemesiyle verilir"><input type="checkbox" name="llmArastirma"> LLM araştırması (OpenRouter, ücretli)</label>
             <label>Günlük otomatik mint <input name="gunlukOtoMint" inputmode="numeric"></label>
             <label>Web arama sonucu <input name="webSonuc" inputmode="numeric" title="Sosyal ajanın her araştırmada okuyacağı web sonucu sayısı. Model ücretsiz olsa da her sonuç OpenRouter'da yaklaşık 0,4 sent. 0 = web araması kapalı."></label>
           </form>
           <div class="onay-cubuk" id="ajan-onay" hidden>
-            <span>Otomatik mint açılınca sistem kurallar geçen <b>0.001 BNB'ye kadar</b> mintleri senin onayın olmadan gönderir (mint başına en fazla 0.001 BNB ve gas). Acil durdur bunu da kapatır.</span>
+            <span>Otomatik mint açılınca sistem kurallar geçen <b>0 BNB'lik</b> mintleri senin onayın olmadan gönderir (mint başına sadece gas). Acil durdur bunu da kapatır.</span>
             <button type="button" class="dugme tehlike" id="ajan-onay-evet">Evet, aç</button>
             <button type="button" class="dugme" id="ajan-onay-hayir">Vazgeç</button>
           </div>

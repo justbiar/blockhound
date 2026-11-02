@@ -55,12 +55,32 @@ export const DOGUM_OLAYLARI = {
   kurulum8: id('Initialized(uint8)'), kurulum64: id('Initialized(uint64)'), yukseltme: id('Upgraded(address)'),
 };
 const SIFIR32 = '0x' + '0'.repeat(64);
+// Mintin açılacağı zaman: kontratlar bunu farklı adlarla yazar. Aynı ad sayaç da olabilir (POPZERO'da OPEN_AT 10000, startTime
+// zamandı): sadece makul bir zaman damgası kabul edilir
+const ACILIS_IMZALARI = ['startTime()', 'mintStartTime()', 'mintStart()', 'saleStart()', 'saleStartTime()', 'publicSaleStart()',
+  'publicStartTime()', 'startAt()', 'openAt()', 'openTime()', 'OPEN_AT()', 'START_TIME()', 'launchTime()', 'startTimestamp()',
+  'mintOpenTime()', 'freeMintStart()', 'claimStart()'];
+const ACILIS_ILERI_MS = 7 * 864e5;
+// Zamanlı kuyruk: bedava faz açılışında saniyeler önemli (POPZERO'nun 2.000 bedava hakkı 7,5 dakikada bitti, ilk 100'ü 8 saniyede)
+const ZAMANLI_ONCE_MS = 5_000; // açılıştan bu kadar önce sık kontrole başlanır
+const ZAMANLI_SIK_MS = 1_500; // açılıştan sonraki ilk iki dakika
+const ZAMANLI_SEYREK_MS = 10_000;
+const ZAMANLI_SURE_MS = 15 * 6e4; // açılıştan sonra en fazla bu kadar beklenir
 const BILINEN_MINT_SECICILERI = BILINEN_IMZALAR.filter((x) => /^mint/.test(x)).map(seciciOf);
 // Revert sebebi Agent ID şartını anlatıyorsa kontrat Agent ID'li sayılır
 const AGENT_SEBEP = /agent|handle|identity|\.ai\b|not registered|no id\b/i;
 
 const secici = (imza) => id(imza).slice(2, 10);
 const seciciVar = (kod, imza) => kod.includes('63' + secici(imza));
+// Saniye ya da milisaniye; şimdiden bir saat önce ile yedi gün sonrası arasında değilse zaman sayılmaz
+export function acilisZamani(v, simdi = Date.now()) {
+  let ms = Number(v);
+  if (!Number.isFinite(ms) || ms <= 0) return null;
+  if (ms < 1e12) ms *= 1000;
+  return ms > simdi - 36e5 && ms < simdi + ACILIS_ILERI_MS ? ms : null;
+}
+const bedavaGecti = (r) => (r.mintler || []).some((m) => m.gecti && m.ucretWei === '0');
+
 const temizle = (s, n = 40) => String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, n);
 
 export function kodla(imza, cuzdan) {
@@ -99,11 +119,20 @@ function macBildirimi(r) {
 }
 
 export class MintTakip extends EventEmitter {
-  constructor({ provider, cuzdanAdresi, dosya = null, registry = AGENT_ID_REGISTRY, aralikMs = 3000, blokParalel = 4,
-    maxGeriBlok = 400, maxBosluk = 50_000, geriDoldurBlok = 40, yenidenKontrolDk = 5, izlemeGun = 14, maxBulunan = 100, bildir = macBildirimi, fetchFn = globalThis.fetch, olayProvider = null, olayAralikMs = 15_000 } = {}) {
+  constructor({ provider, cuzdanAdresi, dosya = null, registry = AGENT_ID_REGISTRY, aralikMs = 3000, blokParalel = 12,
+    maxGeriBlok = 400, maxBosluk = 50_000, geriDoldurBlok = 40, yenidenKontrolDk = 5, izlemeGun = 14, maxBulunan = 100, bildir = macBildirimi, fetchFn = globalThis.fetch, olayProvider = null, olayAralikMs = 15_000, blokProvider = null, incelemeParalel = 4, maxKuyruk = 50,
+    yenidenKontrolYeni = 200, yenidenKontrolEski = 100 } = {}) {
     super();
-    Object.assign(this, { provider, cuzdanAdresi, dosya, aralikMs, blokParalel, maxGeriBlok, maxBosluk, geriDoldurBlok, yenidenKontrolDk, izlemeGun, maxBulunan, bildir, fetchFn, registry, olayAralikMs });
+    Object.assign(this, { provider, cuzdanAdresi, dosya, aralikMs, blokParalel, maxGeriBlok, maxBosluk, geriDoldurBlok, yenidenKontrolDk, izlemeGun, maxBulunan, bildir, fetchFn, registry, olayAralikMs, yenidenKontrolYeni, yenidenKontrolEski, incelemeParalel, maxKuyruk });
     this.olayProviderlar = [olayProvider].flat().filter(Boolean);
+    // Blok taraması bir RPC havuzunda sırayla döner: tek ücretsiz RPC paralel blok okumada hız sınırına takılıyor
+    this.blokProviderlar = [blokProvider].flat().filter(Boolean);
+    if (!this.blokProviderlar.length) this.blokProviderlar = [provider];
+    this.blokSira = 0;
+    this.geride = false;
+    this.incelemeKuyrugu = [];
+    this.incelemeCalisan = 0;
+    this.incelemeBekleyenler = [];
     this.olaySira = 0;
     this.sonOlayTur = 0;
     this.registryHex = registry.toLowerCase().slice(2);
@@ -124,6 +153,11 @@ export class MintTakip extends EventEmitter {
     // boşluklar her turda küçük parçalarla geriye doğru doldurulur
     this.bosluklar = [];
     this.sonYenidenKontrol = 0;
+    // Yeniden kontrolde eski kayıtlar parça parça döner: bir sonraki turun başlayacağı sıra
+    this.eskiImlec = 0;
+    // Açılış zamanı bilinen ve henüz bedava geçmeyen mintler: adres(lowercase) -> { adres, acilis, ad, sonuc, sonKontrol }
+    this.zamanli = {};
+    this.zamanliCalisan = new Set();
     this.yukle();
   }
 
@@ -137,12 +171,13 @@ export class MintTakip extends EventEmitter {
       this.mintEdilenler = d.mintEdilenler || {};
       this.onizlemeler = d.onizlemeler || {};
       this.bosluklar = d.bosluklar || [];
+      this.zamanli = d.zamanli || {};
     } catch { /* bozuk dosya: baştan başla */ }
   }
 
   kaydet() {
     if (!this.dosya) return;
-    writeFileSync(this.dosya, JSON.stringify({ sonBlok: this.durum.sonBlok, bosluklar: this.bosluklar, izleme: this.izleme, bulunanlar: this.bulunanlar, mintEdilenler: this.mintEdilenler, onizlemeler: this.onizlemeler }, null, 2));
+    writeFileSync(this.dosya, JSON.stringify({ sonBlok: this.durum.sonBlok, bosluklar: this.bosluklar, izleme: this.izleme, bulunanlar: this.bulunanlar, mintEdilenler: this.mintEdilenler, onizlemeler: this.onizlemeler, zamanli: this.zamanli }, null, 2));
   }
 
   async cuzdan() {
@@ -314,8 +349,27 @@ export class MintTakip extends EventEmitter {
     try { return BigInt(await this.provider.call({ to, data: '0x01ffc9a7' + arayuz.padEnd(64, '0') })) === 1n; } catch { return false; }
   }
 
+  // Kontratın yazdığı ilk geçerli açılış zamanı (ms)
+  async acilisOku(adres, kod) {
+    for (const s of ACILIS_IMZALARI) if (seciciVar(kod, s)) {
+      const v = acilisZamani(await this.cagir(adres, s));
+      if (v) return v;
+    }
+    return null;
+  }
+
   // Tek bir kontratı inceler. Ağ çağrısı dışında yan etkisi yoktur.
+  // İki fazlı mintlerde (önce bedava, sonra ücretli) ücretli yol geçerken bedava yol henüz açılmamış olabilir: sonuç "ücretli"
+  // kalır ama ikiFaz işaretlenir, açılış zamanı biliniyorsa zamanlı kuyruk onu açılışta yeniden dener
   async incele(adres) {
+    const r = await this.inceleIc(adres);
+    const simdi = Date.now();
+    r.ikiFaz = !bedavaGecti(r) && (r.mintler || []).some((m) => m.gecti)
+      && ((r.mintler || []).some((m) => !m.gecti && m.tur === 'acilmadi') || r.acilis > simdi);
+    return r;
+  }
+
+  async inceleIc(adres) {
     adres = getAddress(adres);
     const cuzdan = await this.cuzdan();
     if (!cuzdan) throw new Error('Cüzdan adresi alınamadı. Önce cüzdanı bağla.');
@@ -326,6 +380,7 @@ export class MintTakip extends EventEmitter {
     const uygulama = await this.uygulamaAdresi(adres, kendi);
     const kod = uygulama ? kendi + String(await this.provider.getCode(uygulama).catch(() => '0x')).toLowerCase().slice(2) : kendi;
     if (uygulama) r.uygulama = uygulama;
+    r.acilis = await this.acilisOku(adres, kod);
 
     const erc721 = (await this.arayuzVar(adres, '80ac58cd')) || (seciciVar(kod, 'ownerOf(uint256)') && seciciVar(kod, 'tokenURI(uint256)'));
     const erc1155 = !erc721 && (await this.arayuzVar(adres, 'd9b67a26'));
@@ -407,13 +462,55 @@ export class MintTakip extends EventEmitter {
 
   kayitEkle(r) {
     this.bulunanlar = [r, ...this.bulunanlar.filter((x) => x.adres !== r.adres)].slice(0, this.maxBulunan);
+    this.zamanliGuncelle(r);
+  }
+
+  // Açılışı gelecekte olan ve henüz bedava geçmeyen Agent ID'li ya da NFT mintleri zamanlı kuyruğa girer
+  zamanliGuncelle(r) {
+    const k = String(r.adres).toLowerCase();
+    if (!(r.acilis > Date.now()) || bedavaGecti(r) || !(r.agentId || r.standart) || this.mintBilgisi(r)) return false;
+    this.zamanli[k] = { adres: r.adres, acilis: r.acilis, ad: r.ad || r.sembol || null, sonuc: r.sonuc, sonKontrol: this.zamanli[k]?.sonKontrol || 0 };
+    return true;
+  }
+
+  // Her saniye çalışır: açılışına birkaç saniye kalan mintler sık sık yeniden incelenir. Mint açılınca "acildi" olayı ajana gider,
+  // otomatik mint kuralları (sadece bedava, Agent ID, günlük sınır) orada uygulanır
+  zamanliTur(simdi = Date.now()) {
+    for (const [k, z] of Object.entries(this.zamanli)) {
+      if (simdi > z.acilis + ZAMANLI_SURE_MS) { delete this.zamanli[k]; this.kaydet(); continue; }
+      if (simdi < z.acilis - ZAMANLI_ONCE_MS || this.zamanliCalisan.has(k)) continue;
+      const aralik = simdi < z.acilis + 2 * 6e4 ? ZAMANLI_SIK_MS : ZAMANLI_SEYREK_MS;
+      if (simdi - (z.sonKontrol || 0) < aralik) continue;
+      z.sonKontrol = simdi;
+      this.zamanliCalisan.add(k);
+      this.zamanliKontrol(k, z).finally(() => this.zamanliCalisan.delete(k));
+    }
+  }
+
+  async zamanliKontrol(k, z) {
+    let r;
+    try { r = await this.incele(z.adres); } catch (e) { this.durum.sonHata = `Zamanlı kontrol: ${e.shortMessage || e.message}`; return; }
+    if (!this.zamanli[k]) return;
+    const w = this.izleme[k];
+    r.blok = w?.blok ?? null;
+    if (r.sonuc === 'TUKENDI' || this.mintBilgisi(r)) { delete this.zamanli[k]; this.kayitEkle(r); this.kaydet(); return; }
+    if (!bedavaGecti(r) && !(BILDIRILEN.has(r.sonuc) && r.sonuc !== z.sonuc)) return;
+    delete this.zamanli[k];
+    if (w) w.sonuc = r.sonuc;
+    else this.izleme[k] = { adres: r.adres, ilkGorulme: Date.now(), blok: null, sonuc: r.sonuc, ad: r.ad };
+    this.durum.zamanliYakalanan = (this.durum.zamanliYakalanan || 0) + 1;
+    this.kayitEkle(r);
+    this.kaydet();
+    this.emit('acildi', r);
+    this.bildir?.(r);
   }
 
   async yeniKontrat(adres, blok) {
     const anahtar = adres.toLowerCase();
     if (this.izleme[anahtar]) return;
     const r = await this.incele(adres);
-    if (!IZLENEN.has(r.sonuc)) return;
+    // Açılışı gelecekte olan Agent ID'li ya da NFT mintleri, şu an hiçbir yolu geçmese de izlenir
+    if (!IZLENEN.has(r.sonuc) && !(r.acilis > Date.now() && (r.agentId || r.standart))) return;
     r.blok = blok;
     this.izleme[anahtar] = { adres: r.adres, ilkGorulme: Date.now(), blok, sonuc: r.sonuc, ad: r.ad };
     this.kayitEkle(r);
@@ -433,10 +530,23 @@ export class MintTakip extends EventEmitter {
     }));
   }
 
+  // İzleme listesi binlerce kontrata çıkabiliyor: hepsini sırayla kontrol etmek saatler sürer. Her turda son bir günde
+  // görülenlerin en yenileri ve eskilerden sıradaki bir parça kontrol edilir. Açılış saatine bağlı mintleri zamanlı kuyruk yakalar
   async yenidenKontrol() {
-    const sinir = Date.now() - this.izlemeGun * 864e5;
+    const basla = Date.now();
+    const sinir = basla - this.izlemeGun * 864e5;
     for (const [anahtar, w] of Object.entries(this.izleme)) {
-      if (w.ilkGorulme < sinir || ['TUKENDI', 'ZATEN-ALDIN'].includes(w.sonuc)) { delete this.izleme[anahtar]; continue; }
+      if (w.ilkGorulme < sinir || ['TUKENDI', 'ZATEN-ALDIN'].includes(w.sonuc)) delete this.izleme[anahtar];
+    }
+    const sirali = Object.entries(this.izleme).sort((a, b) => b[1].ilkGorulme - a[1].ilkGorulme);
+    const gunluk = sirali.filter(([, w]) => basla - w.ilkGorulme < 864e5);
+    const yeni = gunluk.slice(0, this.yenidenKontrolYeni);
+    const eski = sirali.slice(yeni.length);
+    if (this.eskiImlec >= eski.length) this.eskiImlec = 0;
+    const parca = eski.slice(this.eskiImlec, this.eskiImlec + this.yenidenKontrolEski);
+    this.eskiImlec += parca.length;
+    for (const [anahtar, w] of [...yeni, ...parca]) {
+      if (!this.izleme[anahtar]) continue;
       try {
         const r = await this.incele(w.adres);
         r.blok = w.blok;
@@ -447,29 +557,61 @@ export class MintTakip extends EventEmitter {
         this.kayitEkle(r);
       } catch (e) { this.durum.sonHata = e.shortMessage || e.message; }
     }
+    this.durum.sonKontrol = { zaman: Date.now(), sureMs: Date.now() - basla, kontrat: yeni.length + parca.length, izlenen: sirali.length };
     await this.bakiyeleriTazele().catch(() => {});
     this.kaydet();
     this.emit('kontrolBitti');
   }
 
+  // Blok ve makbuzları havuzdaki sıradaki RPC'den okur; hata veren RPC'de bir sonrakiyle yeniden dener.
+  // Hepsi başarısız olursa hata fırlatılır: çağıran o bloğu boşluğa yazar, taranmış saymaz
   async bloktakiKontratlar(n) {
-    const blok = await this.provider.send('eth_getBlockByNumber', [toQuantity(n), true]);
-    const adresler = [];
-    for (const tx of (blok?.transactions ?? []).filter((t) => t.to === null)) {
-      const rc = await this.provider.send('eth_getTransactionReceipt', [tx.hash]);
-      if (rc?.status === '0x1' && rc.contractAddress) adresler.push(rc.contractAddress);
+    const havuz = this.blokProviderlar;
+    let son;
+    for (let deneme = 0; deneme < havuz.length; deneme++) {
+      const p = havuz[this.blokSira++ % havuz.length];
+      try {
+        const blok = await p.send('eth_getBlockByNumber', [toQuantity(n), true]);
+        if (!blok) throw new Error(`Blok ${n} henüz yok`);
+        const adresler = [];
+        for (const tx of (blok.transactions ?? []).filter((t) => t.to === null)) {
+          const rc = await p.send('eth_getTransactionReceipt', [tx.hash]);
+          if (rc?.status === '0x1' && rc.contractAddress) adresler.push(rc.contractAddress);
+        }
+        return adresler;
+      } catch (e) { son = e; }
     }
-    return adresler;
+    throw son;
   }
 
-  async adayIncele(adres, blok, { fabrika = false } = {}) {
+  // Canlı bloklardan gelenler kuyruğun önüne geçer: taze bir mint, eski boşluklardan gelen kontratların arkasında beklemesin
+  async adayIncele(adres, blok, { fabrika = false, eski = false } = {}) {
     const k = adres.toLowerCase();
     if (this.gorulen.has(k)) return;
     if (this.gorulen.size > 50_000) this.gorulen.clear();
     this.gorulen.add(k);
     this.durum.kontrat++;
     if (fabrika) this.durum.fabrika = (this.durum.fabrika || 0) + 1;
-    await this.yeniKontrat(adres, blok).catch((e) => { this.durum.sonHata = e.shortMessage || e.message; });
+    if (eski) this.incelemeKuyrugu.push([adres, blok]); else this.incelemeKuyrugu.unshift([adres, blok]);
+    this.incelemePompala();
+  }
+
+  // Kontrat incelemesi onlarca eth_call sürer: tarama döngüsünü bekletmesin diye kuyrukta, sınırlı paralellikle yürür
+  incelemePompala() {
+    while (this.incelemeCalisan < this.incelemeParalel && this.incelemeKuyrugu.length) {
+      const [adres, blok] = this.incelemeKuyrugu.shift();
+      this.incelemeCalisan++;
+      this.yeniKontrat(adres, blok).catch((e) => { this.durum.sonHata = e.shortMessage || e.message; }).finally(() => {
+        this.incelemeCalisan--;
+        this.incelemePompala();
+        if (!this.incelemeCalisan && !this.incelemeKuyrugu.length) for (const f of this.incelemeBekleyenler.splice(0)) f();
+      });
+    }
+  }
+
+  incelemeleriBekle() {
+    if (!this.incelemeCalisan && !this.incelemeKuyrugu.length) return Promise.resolve();
+    return new Promise((r) => this.incelemeBekleyenler.push(r));
   }
 
   // Olay taraması blok taramasından ayrı ve seyrek çalışır: ücretsiz RPC'lerin hız sınırına takılmamak için
@@ -514,7 +656,7 @@ export class MintTakip extends EventEmitter {
     return [...bulunan].map(([adres, blok]) => ({ adres, blok }));
   }
 
-  boslukEkle(bas, son) {
+  boslukEkle(bas, son, { kaydet = true } = {}) {
     if (son < bas) return;
     // Çakışan ya da bitişik aralıklar birleştirilir: aynı blok iki kez taranmasın
     const hepsi = [...this.bosluklar, { bas, son }].sort((a, b) => a.bas - b.bas);
@@ -528,7 +670,7 @@ export class MintTakip extends EventEmitter {
     this.bosluklar.sort((a, b) => b.son - a.son);
     let kalan = this.maxBosluk;
     this.bosluklar = this.bosluklar.filter((x) => { if (kalan <= 0) return false; x.bas = Math.max(x.bas, x.son - kalan + 1); kalan -= x.son - x.bas + 1; return true; });
-    this.kaydet();
+    if (kaydet) this.kaydet();
   }
 
   // Her turda en yeni boşluğun sonundan geriye doğru `geriDoldurBlok` kadar blok tarar
@@ -542,7 +684,7 @@ export class MintTakip extends EventEmitter {
       const sonuclar = await Promise.all(bloklar.map((x) => this.bloktakiKontratlar(x).then((a) => [x, a]).catch(() => [x, null])));
       const hata = sonuclar.findIndex(([, a]) => a === null);
       const tamam = hata < 0 ? sonuclar : sonuclar.slice(0, hata);
-      for (const [x, adresler] of tamam) for (const a of adresler) await this.adayIncele(a, x);
+      for (const [x, adresler] of tamam) for (const a of adresler) await this.adayIncele(a, x, { eski: true });
       if (tamam.length) b.son = tamam.at(-1)[0] - 1;
       if (hata >= 0) break;
     }
@@ -555,8 +697,12 @@ export class MintTakip extends EventEmitter {
     for (let n = bas; n <= son; n += this.blokParalel) {
       const bloklar = Array.from({ length: Math.min(this.blokParalel, son - n + 1) }, (_, i) => n + i);
       const sonuclar = await Promise.all(bloklar.map((b) => this.bloktakiKontratlar(b).then((a) => [b, a])
-        .catch((e) => { this.durum.sonHata = `Blok ${b}: ${e.shortMessage || e.message}`; return [b, []]; })));
-      for (const [b, adresler] of sonuclar) for (const a of adresler) await this.adayIncele(a, b);
+        .catch((e) => { this.durum.sonHata = `Blok ${b}: ${e.shortMessage || e.message}`; return [b, null]; })));
+      // Okunamayan blok boşluğa yazılır, sonra yeniden taranır: sessizce atlanırsa içindeki kontratlar kaybolur
+      for (const [b, adresler] of sonuclar) {
+        if (adresler === null) { this.boslukEkle(b, b, { kaydet: false }); continue; }
+        for (const a of adresler) await this.adayIncele(a, b);
+      }
       this.durum.sonBlok = bloklar.at(-1);
       this.durum.taranan += bloklar.length;
     }
@@ -573,7 +719,14 @@ export class MintTakip extends EventEmitter {
       bas = yeniBas;
     }
     if (bas <= tepe) await this.aralikTara(bas, tepe);
-    await this.boslukDoldur();
+    // Önce canlı: tarama sürerken zincir ilerlediyse boşluk doldurma atlanır ve döngü beklemeden yeniden döner
+    const yeniTepe = await this.provider.getBlockNumber().catch(() => tepe);
+    this.geride = yeniTepe - (this.durum.sonBlok ?? yeniTepe) > this.blokParalel * 2;
+    // İnceleme kuyruğu birikmişse eski boşluklar beklesin: önce kuyruk erisin
+    if (!this.geride && this.incelemeKuyrugu.length < this.maxKuyruk) await this.boslukDoldur();
+    this.durum.bosluk = this.bosluklar.reduce((t, x) => t + x.son - x.bas + 1, 0);
+    this.durum.gerideBlok = Math.max(0, yeniTepe - (this.durum.sonBlok ?? yeniTepe));
+    this.durum.incelemeKuyrugu = this.incelemeKuyrugu.length;
     await this.olayTur(tepe);
     // İzlenenlerin yeniden kontrolü dakikalar sürebilir: arka planda yürür, canlı taramayı bekletmez (yoksa takip zincirin
     // gerisine düşer ve aradaki bloklar boşluğa kalır). Aynı anda tek kontrol çalışır
@@ -592,18 +745,20 @@ export class MintTakip extends EventEmitter {
     const dongu = async () => {
       if (!this.durum.calisiyor) return;
       await this.tur().catch((e) => { this.durum.sonHata = e.shortMessage || e.message; });
-      this.zamanlayici = setTimeout(dongu, this.aralikMs);
+      this.zamanlayici = setTimeout(dongu, this.geride ? 0 : this.aralikMs);
     };
     dongu();
+    this.zamanliZamanlayici = setInterval(() => this.zamanliTur(), 1000);
   }
 
-  durdur() { this.durum.calisiyor = false; clearTimeout(this.zamanlayici); }
+  durdur() { this.durum.calisiyor = false; clearTimeout(this.zamanlayici); clearInterval(this.zamanliZamanlayici); }
 
   ozet() {
     return {
       durum: this.durum,
       bulunanlar: this.bulunanlar.map((r) => ({ ...r, mintEdildi: this.mintBilgisi(r), onizleme: this.onizlemeler[String(r.adres).toLowerCase()] || null })),
       izleme: Object.values(this.izleme).sort((a, b) => b.ilkGorulme - a.ilkGorulme),
+      zamanli: Object.values(this.zamanli).sort((a, b) => a.acilis - b.acilis),
     };
   }
 }

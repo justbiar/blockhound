@@ -32,8 +32,10 @@ Görüntüler gerçek terminalden, canlı zincir verisiyle alındı. Arayüz Tü
   zincirden okur. Hem NFT mintlerini hem de bir mint kontratı üzerinden dağıtılan token mintlerini tanır.
 - **Ücretsiz güvenlik süzgeci.** Gönderimden önce OKX işlem, token ve site taramaları, taklit marka adları ve son kapı olarak Binance
   cüzdan önizlemesi. Token izni isteyen, yetki değiştiren, beklenmeyen çıkış yapan ya da cüzdana bir şey getirmeyen her şey elenir.
-- **Otomatik mint.** Kuralları geçen ücretsiz ve neredeyse ücretsiz (0.001 BNB'ye kadar) mintler günlük sınır içinde otomatik
-  gönderilir. Daha pahalı olanlar tek tıkla mint akışıyla sana gösterilir.
+- **Otomatik mint.** Sadece gas ödenen (0 BNB) ve kuralları geçen mintler günlük sınır içinde otomatik gönderilir. 0.001 BNB bile
+  isteyen her mint tek tıkla mint akışıyla sana gösterilir ve onayını bekler.
+- **Yaklaşan açılışlar.** Açılış saatini yazan kontratlar (startTime, openAt vb.) geri sayımla gösterilir. Açılıştan 5 saniye
+  önce başlayıp 1,5 saniyede bir yeniden kontrol edilir, böylece bedava faz ilk saniyelerde yakalanır.
 - **Piyasa açıldı bildirimi.** Elindeki fiyatsız tokenler (havuzu henüz kurulmamış) periyodik kontrol edilir; piyasa açıldığı an
   masaüstü bildirimi gelir.
 - **Portföy.** Cüzdan geçmişinden gerçek kâr / zarar, *Normal* ve *Agent* (otomatik mintlenenler) diye ayrılmış; grafikler, hemen
