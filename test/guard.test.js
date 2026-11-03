@@ -70,3 +70,18 @@ test('adres ve miktar doğrulama', () => {
   assert.equal(miktarKontrol('0.01'), '0.01');
   for (const k of ['', '-1', '0', '1e5', 'abc', '--fromToken']) assert.throws(() => miktarKontrol(k), new RegExp(''), k);
 });
+
+test('satışta izinli çıkış: yalnızca o token, en fazla o miktar', () => {
+  const TOKEN = '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82';
+  const satis = (change, adres = TOKEN, tur = 'Erc20') => {
+    const p = temiz();
+    p.simulationResult.balanceChanges = [{ owner: BEN.toLowerCase(), change, tokenType: tur, contractAddress: adres }, { owner: BEN.toLowerCase(), change: 1e15, tokenType: 'Native' }];
+    return p;
+  };
+  const izin = { token: TOKEN, maxMiktar: 1e21 };
+  assert.equal(previewIncele(satis(-1e21), { cuzdan: BEN }).ok, false);
+  assert.equal(previewIncele(satis(-1e21), { cuzdan: BEN, izinliCikis: izin }).ok, true);
+  assert.equal(previewIncele(satis(-2e21), { cuzdan: BEN, izinliCikis: izin }).ok, false);
+  assert.equal(previewIncele(satis(-1e21, '0x55d398326f99059fF775485246999027B3197955'), { cuzdan: BEN, izinliCikis: izin }).ok, false);
+  assert.equal(previewIncele(satis(-1, TOKEN, 'Erc721'), { cuzdan: BEN, izinliCikis: izin }).ok, false);
+});

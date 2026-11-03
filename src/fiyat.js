@@ -115,6 +115,9 @@ export class FiyatServisi {
     return is;
   }
 
+  // Başka modüller (PancakeSwap) aynı sıradan geçsin: dakikalık sınır tek yerde tutulur
+  gecko(url) { return this.#gecko(url); }
+
   async havuz(adres) {
     const k = adres.toLowerCase();
     const h = this.havuzlar[k];

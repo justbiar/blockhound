@@ -17,7 +17,8 @@ const BASARILI_SIMULASYON = '000000000';
 
 // contract-call preview sonucunu inceler. Herhangi bir şüphe varsa ok=false döner, sebepleri listeler.
 // izinliOnay: { token, spender, maxMiktar } verilirse sadece o tokende, o spender'a, en fazla o miktara (ham birim) onay kabul edilir.
-export function previewIncele(pre, { cuzdan, izinliOnay = null } = {}) {
+// izinliCikis: { token, maxMiktar } verilirse (satış) cüzdandan yalnızca o token, en fazla o miktar (ham birim) çıkabilir.
+export function previewIncele(pre, { cuzdan, izinliOnay = null, izinliCikis = null } = {}) {
   const sebepler = [];
   if (!pre || typeof pre !== 'object') return { ok: false, sebepler: ['Preview sonucu boş'] };
   if (!pre.requestId) sebepler.push('Preview requestId döndürmedi (Binance işlemi engellemiş olabilir)');
@@ -51,7 +52,9 @@ export function previewIncele(pre, { cuzdan, izinliOnay = null } = {}) {
   const ben = String(cuzdan || '').toLowerCase();
   for (const b of sim.balanceChanges || []) {
     if (ben && String(b.owner || '').toLowerCase() === ben && Number(b.change) < 0 && b.tokenType !== 'Native') {
-      sebepler.push(`Cüzdandan çıkış: ${b.tokenType} ${b.contractAddress} (${b.change})`);
+      const izinli = izinliCikis && b.tokenType !== 'Erc721' && String(b.contractAddress || '').toLowerCase() === String(izinliCikis.token).toLowerCase()
+        && -Number(b.change) <= Number(izinliCikis.maxMiktar) * (1 + 1e-9);
+      if (!izinli) sebepler.push(`Cüzdandan çıkış: ${b.tokenType} ${b.contractAddress} (${b.change})`);
     }
   }
 

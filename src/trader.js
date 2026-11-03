@@ -108,12 +108,12 @@ export class Trader extends EventEmitter {
   }
 
   // Kontrat çağrısını emir geçmişine kaydederek çalıştırır (bonding curve alımları)
-  async kontratEmriVer({ yon, token, miktar, kayma, cuzdan, tx, teklif, izinliOnay = null, rota = 'bonding curve', kaynak = 'manuel' }) {
+  async kontratEmriVer({ yon, token, miktar, kayma, cuzdan, tx, teklif, izinliOnay = null, izinliCikis = null, rota = 'bonding curve', kaynak = 'manuel' }) {
     const emir = { id: randomUUID(), zaman: Date.now(), yon, token, miktar: String(miktar), kayma, kaynak, canli: this.canli, durum: 'teklif', rota, teklif };
     this.emirler.unshift(emir);
     this.emirler.length = Math.min(this.emirler.length, 200);
     this.#guncelle(emir, { durum: 'gonderiliyor' });
-    const r = await this.kontratCagir({ cuzdan, kime: tx.to, veri: tx.inputData, degerWei: tx.value, izinliOnay, kaynak }).catch((e) => ({ durum: 'basarisiz', sebep: e.message }));
+    const r = await this.kontratCagir({ cuzdan, kime: tx.to, veri: tx.inputData, degerWei: tx.value, izinliOnay, izinliCikis, kaynak }).catch((e) => ({ durum: 'basarisiz', sebep: e.message }));
     const durum = { 'app-onayi-bekliyor': 'bekliyor' }[r.durum] || r.durum;
     const sebep = r.durum === 'gonderildi' ? 'Zincire gönderildi' : r.durum === 'app-onayi-bekliyor' ? 'Binance App\'te onay bekliyor' : r.sebep;
     return this.#guncelle(emir, { durum, sebep, txHash: r.txHash || null });
@@ -141,14 +141,14 @@ export class Trader extends EventEmitter {
   }
 
   // Ham kontrat çağrısı (Aşama 2: Agent ID'ye özel havuzlar). Preview'da tek bir şüphe bile varsa çalıştırmaz.
-  async kontratCagir({ cuzdan, kime, veri, degerWei = '0', izinliOnay = null, kaynak = 'manuel' }) {
+  async kontratCagir({ cuzdan, kime, veri, degerWei = '0', izinliOnay = null, izinliCikis = null, kaynak = 'manuel' }) {
     const bnb = Number(BigInt(degerWei)) / 1e18;
     if (bnb > 0) {
       const l = limitKontrol({ bnb, islemBasiMax: this.islemBasiMax, gunlukMax: this.gunlukMax, bugunHarcanan: this.bugunHarcanan() });
       if (!l.ok) return { durum: 'reddedildi', sebep: l.sebep };
     }
     const pre = await this.baw.preview({ kimden: cuzdan, kime, degerWei, veri });
-    const inceleme = previewIncele(pre, { cuzdan, izinliOnay });
+    const inceleme = previewIncele(pre, { cuzdan, izinliOnay, izinliCikis });
     if (!inceleme.ok) return { durum: 'reddedildi', sebep: inceleme.sebepler.join(' | '), preview: pre };
     if (!this.canli) return { durum: 'simulasyon', sebep: 'Canlı işlem kapalı: preview temiz, gönderilmedi', preview: pre };
     if (bnb > 0) this.#ayir(bnb);

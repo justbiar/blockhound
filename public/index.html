@@ -66,6 +66,7 @@
       <button type="button" data-gorunum="otomasyon"><span>Otomasyon</span><small>Sniper, oto satış</small></button>
       <button type="button" data-gorunum="mintler"><span>Mintler</span><small>Ücretsiz mint takibi</small></button>
       <button type="button" data-gorunum="liderler"><span>Liderler</span><small>En çok kazanan cüzdanlar</small></button>
+      <button type="button" data-gorunum="pancake"><span>Pancake</span><small>PancakeSwap fiyat, grafik, swap</small></button>
       <button type="button" data-gorunum="hound"><span>HOUND</span><small>Token ve NFT takibi</small></button>
       <button type="button" data-gorunum="basim"><span>Basım</span><small>Four.meme'de token bas</small></button>
       <button type="button" data-gorunum="cuzdan"><span>Cüzdan</span><small>Bağlantı, bakiye</small></button>
@@ -456,6 +457,37 @@
         <p class="not">Kazanç gerçekleşmiş kâr / zarardır (satılmış pozisyonlar). "En zengin" zincirin tamamı değil: seçilen süredeki kazanç ve hacim listelerinde yer alan aktif cüzdanların BSC'deki varlık değeridir. Liste sadece bilgi içindir; bu cüzdanları körü körüne takip etmek zarar ettirebilir, çoğu yüksek riskli meme tokenlerde işlem yapar.</p>
       </section>
 
+      <!-- PANCAKE -->
+      <section class="gorunum" data-gorunum="pancake" hidden>
+        <div class="bolum-bas">
+          <div>
+            <h1>PancakeSwap</h1>
+            <p class="alt">Fiyat, likidite ve havuzlar doğrudan PancakeSwap kontratlarından okunur · grafik ve holder sayısı GeckoTerminal'den · <span id="pc-durum"></span></p>
+          </div>
+        </div>
+        <form id="pc-form" class="pc-ara">
+          <input name="adres" type="search" class="mono" placeholder="Token adresi: 0x…" pattern="^0x[0-9a-fA-F]{40}$" required autocomplete="off" spellcheck="false" aria-label="Token adresi">
+          <button type="submit" class="dugme ana">Getir</button>
+          <button type="button" class="dugme" id="pc-fisten">Fişteki token</button>
+        </form>
+        <div id="pc-son" class="pc-son"></div>
+        <div id="pc-icerik"><p class="soluk">Bir token adresi gir. Fiyat, piyasa değeri, arz, likidite, holder ve havuzlar burada görünür.</p></div>
+        <div id="pc-grafik-kart" class="kart" hidden>
+          <div class="grafik-bas">
+            <h2 class="kart-baslik">Fiyat grafiği <span class="soluk" id="pc-grafik-not"></span></h2>
+            <div class="sekme kucuk" role="radiogroup" aria-label="Aralık" id="pc-aralik">
+              <label><input type="radio" name="pc-aralik" value="5d"><span>5D</span></label>
+              <label><input type="radio" name="pc-aralik" value="15d"><span>15D</span></label>
+              <label><input type="radio" name="pc-aralik" value="1s" checked><span>1S</span></label>
+              <label><input type="radio" name="pc-aralik" value="4s"><span>4S</span></label>
+              <label><input type="radio" name="pc-aralik" value="1g"><span>1G</span></label>
+            </div>
+          </div>
+          <div id="pc-grafik" class="grafik"></div>
+        </div>
+        <div id="pc-havuzlar"></div>
+      </section>
+
       <section class="gorunum" data-gorunum="hound" hidden>
         <div class="bolum-bas">
           <div>
@@ -614,6 +646,10 @@
         <div class="sekme" role="radiogroup">
           <label><input type="radio" name="yon" value="al" checked><span>Al</span></label>
           <label><input type="radio" name="yon" value="sat"><span>Sat</span></label>
+        </div>
+        <div class="sekme rota-sekme" role="radiogroup" aria-label="Rota">
+          <label><input type="radio" name="dex" value="" checked><span>Binance</span></label>
+          <label><input type="radio" name="dex" value="pancake"><span>PancakeSwap</span></label>
         </div>
         <label>Token adresi
           <input name="token" placeholder="0x…" required pattern="^0x[0-9a-fA-F]{40}$" autocomplete="off" class="mono">

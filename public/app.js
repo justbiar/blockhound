@@ -62,6 +62,7 @@ function gorunumAc(ad) {
   if (ad === 'mintler') mintlerYenile();
   if (ad === 'liderler') liderlerYenile();
   if (ad === 'hound') houndYenile();
+  if (ad === 'pancake') pancakeYenile();
   if (ad === 'ayarlar') { bildirimYenile(); uygYenile(); }
 }
 // Üst menüde açıklamalar ipucu olarak: dar çubukta yer kaplamaz
@@ -202,7 +203,7 @@ const form = $('emir-form');
 let seciliToken = null;   // Siper'den seçilen tokenin bilgisi
 const formVeri = () => {
   const f = new FormData(form);
-  return { yon: f.get('yon'), token: f.get('token').trim(), miktar: f.get('miktar').trim(), kayma: f.get('kayma').trim() ? Number(f.get('kayma')) : undefined };
+  return { yon: f.get('yon'), token: f.get('token').trim(), miktar: f.get('miktar').trim(), kayma: f.get('kayma').trim() ? Number(f.get('kayma')) : undefined, dex: f.get('dex') === 'pancake' ? 'pancake' : undefined };
 };
 
 function fisSifirla() {
@@ -227,10 +228,11 @@ function seciliCiz() {
 }
 form.elements.token.addEventListener('input', seciliCiz);
 
-function fisDoldur({ adres, yon = 'al', miktar = '', token = null }) {
+function fisDoldur({ adres, yon = 'al', miktar = '', token = null, dex = null }) {
   seciliToken = token;
   form.elements.token.value = adres;
   form.querySelector(`input[name=yon][value=${yon}]`).checked = true;
+  form.querySelector(`input[name=dex][value="${dex === 'pancake' ? 'pancake' : ''}"]`).checked = true;
   form.elements.miktar.value = miktar;
   fisSifirla();
   seciliCiz();
@@ -245,10 +247,11 @@ $('teklif-btn').onclick = async () => {
   $('emir-onay').hidden = true;
   try {
     const t = await api('/api/teklif', formVeri());
-    const rota = t.rota === 'contract-call' ? 'Bonding curve' : 'DEX';
+    const rota = t.rotaAd || (t.rota === 'contract-call' ? 'Bonding curve' : 'DEX');
     const notlar = [
       t.tavanUyarisi ? '<span class="hata">Cüzdan başı %1 tavanına takıldı, artan BNB iade edilir.</span>' : '',
-      t.onayGerekli ? 'Önce tam satış miktarı kadar Four Core\'a onay gönderilir, sonra satış.' : '',
+      t.onayGerekli && t.rota === 'pancakeswap' ? 'Önce satış miktarı kadar PancakeSwap router\'ına onay gönderilir, sonra satış.' : '',
+      t.onayGerekli && t.rota !== 'pancakeswap' ? 'Önce tam satış miktarı kadar Four Core\'a onay gönderilir, sonra satış.' : '',
       t.rota === 'contract-call' && formVeri().yon === 'al' ? 'Curve aşamasında sadece Agent ID sahipleri satabilir.' : '',
     ].filter(Boolean).map((n) => `<div class="not">${n}</div>`).join('');
     $('teklif').innerHTML = `<dl>
@@ -1990,6 +1993,157 @@ function houndKart(k, d) {
 
 $('hound-yenile').addEventListener('click', () => houndYenile(true));
 setInterval(() => { if (!document.querySelector('section[data-gorunum=hound]').hidden) houndYenile(); }, 60_000);
+
+// ---------- PancakeSwap: fiyat, piyasa değeri, arz, likidite, holder, havuzlar ve mum grafiği ----------
+const pcForm = $('pc-form');
+let pcAdres = depoOku('pc-adres', null);
+let pcHavuz = null;          // grafiği çizilen havuz (boşsa en derin havuz)
+let pcBilgi = null;
+let pcGrafik = null, pcMumSeri = null, pcHacimSeri = null;
+const usdKisa = (v) => (v == null ? '?' : v >= 1 ? `$${kisaSayi(v)}` : usd(v));
+const adetKisa = (v) => (v == null ? '?' : v >= 1e9 ? `${(v / 1e9).toFixed(2)}B` : kisaSayi(v));
+const pcYuzde = (v) => (v == null ? '?' : `${v > 0 ? '+' : ''}${Number(v).toFixed(2)}%`);
+const pcGorunur = () => !document.querySelector('section[data-gorunum="pancake"]').hidden;
+
+function pcSonCiz() {
+  const son = depoOku('pc-son', []);
+  $('pc-son').innerHTML = son.map((t) => `<button type="button" class="cip-dugme" data-pc-adres="${esc(t.adres)}" aria-pressed="${String(t.adres.toLowerCase() === String(pcAdres).toLowerCase())}">${esc(t.sembol)}</button>`).join('');
+}
+function pcSonEkle(b) {
+  const son = depoOku('pc-son', []).filter((t) => t.adres.toLowerCase() !== b.adres.toLowerCase());
+  son.unshift({ adres: b.adres, sembol: b.sembol });
+  depoYaz('pc-son', son.slice(0, 8));
+}
+
+const pcKart = (baslik, deger, alt, ana = false) => `<div class="pnl-kart${ana ? ' ana' : ''}"><small>${esc(baslik)}</small><b>${deger}</b><span>${alt}</span></div>`;
+
+function pcCiz(b) {
+  const degisimSinif = b.degisim24s > 0 ? 'kazanc' : b.degisim24s < 0 ? 'kayip' : 'soluk';
+  const ust = `<div class="pc-bas">
+      <div><h2 class="kart-baslik">${esc(b.sembol)} <span class="soluk">${esc(b.ad)}</span></h2><div class="adres">${esc(b.adres)}</div></div>
+      <div class="satir-dugmeler">
+        <button type="button" class="dugme ana" data-pc-islem="al"${b.anaHavuz ? '' : ' disabled'}>PancakeSwap ile al</button>
+        <button type="button" class="dugme" data-pc-islem="sat"${b.anaHavuz ? '' : ' disabled'}>Sat</button>
+        <a class="dugme" href="https://pancakeswap.finance/swap?chain=bsc&outputCurrency=${esc(b.adres)}" target="_blank" rel="noopener">PancakeSwap'ta aç</a>
+        <a class="dugme" href="https://bscscan.com/token/${esc(b.adres)}" target="_blank" rel="noopener">BscScan</a>
+      </div>
+    </div>`;
+  if (!b.anaHavuz) {
+    $('pc-icerik').innerHTML = `${ust}<div class="kart"><b>PancakeSwap'ta havuz yok.</b><div class="soluk">Bu token için WBNB, USDT ya da USD1 karşılığında bir V2 ya da V3 havuzu bulunamadı. Bonding curve'deki tokenler için rota Binance olarak kalmalı.</div></div>
+      <div class="pnl-kartlar">${pcKart('Arz', adetKisa(b.arz), `Dolaşımda ${adetKisa(b.dolasim)} · yakılan ${adetKisa(b.yakilan)}`)}${pcKart('Holder', b.holder != null ? b.holder.toLocaleString(YEREL) : '?', b.ilk10Yuzde != null ? `İlk 10 cüzdan %${Number(b.ilk10Yuzde).toFixed(1)}` : 'İlk 10 payı bilinmiyor')}</div>`;
+    $('pc-havuzlar').innerHTML = '';
+    $('pc-grafik-kart').hidden = true;
+    return;
+  }
+  sabitCiz($('pc-icerik'), `${ust}<div class="pnl-kartlar">
+    ${pcKart('Fiyat', esc(fiyatYaz(b.fiyatUsd)), `${esc(b.fiyatBnb != null ? anlamli(b.fiyatBnb) : '?')} BNB · 24s <span class="${degisimSinif}">${esc(pcYuzde(b.degisim24s))}</span>`, true)}
+    ${pcKart('Piyasa değeri', esc(usdKisa(b.piyasaDegeriUsd)), `FDV ${esc(usdKisa(b.fdvUsd))}`)}
+    ${pcKart('Likidite', esc(usdKisa(b.likiditeUsd)), `${b.havuzlar.length} havuz · en derini ${esc(b.anaHavuz.surum.toUpperCase())} ${esc(b.sembol)}/${esc(b.anaHavuz.karsi)}`)}
+    ${pcKart('Holder', b.holder != null ? esc(b.holder.toLocaleString(YEREL)) : '?', b.ilk10Yuzde != null ? `İlk 10 cüzdan %${esc(Number(b.ilk10Yuzde).toFixed(1))}` : 'İlk 10 payı bilinmiyor')}
+    ${pcKart('Arz', esc(adetKisa(b.arz)), `Dolaşımda ${esc(adetKisa(b.dolasim))} · yakılan ${esc(adetKisa(b.yakilan))}`)}
+    ${pcKart('24s hacim', esc(usdKisa(b.hacim24sUsd)), `${esc(b.alim24s ?? '?')} alım · ${esc(b.satim24s ?? '?')} satım`)}
+  </div>`);
+  const secili = (pcHavuz || b.anaHavuz.adres).toLowerCase();
+  sabitCiz($('pc-havuzlar'), `<h2>Havuzlar</h2><p class="not">Satıra tıkla: grafik o havuzdan çizilir.</p><div class="tablo-kap"><table>
+    <thead><tr><th>Havuz</th><th>Sürüm</th><th>Ücret</th><th>Fiyat</th><th>Likidite</th><th>Adres</th></tr></thead><tbody>
+    ${b.havuzlar.map((h) => `<tr class="pc-havuz${h.adres.toLowerCase() === secili ? ' secili-satir' : ''}" data-pc-havuz="${esc(h.adres)}" data-capa="pc-${esc(h.adres)}">
+      <td>${esc(b.sembol)}/${esc(h.karsi)}</td><td>${esc(h.surum.toUpperCase())}</td><td>%${esc(h.ucret / 10_000)}</td>
+      <td>${esc(fiyatYaz(h.fiyatUsd))}</td><td>${esc(usdKisa(h.likiditeUsd))}</td>
+      <td><a class="mono" href="https://bscscan.com/address/${esc(h.adres)}" target="_blank" rel="noopener">${esc(kisalt(h.adres))}</a></td></tr>`).join('')}
+    </tbody></table></div>`);
+}
+
+async function pancakeYenile({ sessiz = false } = {}) {
+  pcSonCiz();
+  if (!pcAdres) return;
+  if (pcForm.elements.adres.value.trim().toLowerCase() !== pcAdres.toLowerCase()) pcForm.elements.adres.value = pcAdres;
+  if (!sessiz) $('pc-durum').textContent = 'yükleniyor…';
+  try {
+    const b = await api(`/api/pancake/token?adres=${encodeURIComponent(pcAdres)}`);
+    if (b.adres.toLowerCase() !== pcAdres.toLowerCase()) return;
+    const yeniToken = pcBilgi?.adres !== b.adres;
+    pcBilgi = b;
+    pcSonEkle(b); pcSonCiz();
+    pcCiz(b);
+    $('pc-durum').textContent = `güncellendi ${new Date(b.zaman).toLocaleTimeString(YEREL)}`;
+    if (yeniToken || !sessiz) pcGrafikCiz();
+  } catch (e) {
+    $('pc-durum').textContent = '';
+    $('pc-icerik').innerHTML = `<p class="hata">${esc(e.message)}</p>`;
+    $('pc-havuzlar').innerHTML = '';
+    $('pc-grafik-kart').hidden = true;
+  }
+}
+
+function pcGrafikKur() {
+  if (pcGrafik || !LWC) return;
+  pcGrafik = grafikYap($('pc-grafik'));
+  pcMumSeri = pcGrafik.addCandlestickSeries({
+    upColor: renk('--gain'), downColor: renk('--warn'), wickUpColor: renk('--gain'), wickDownColor: renk('--warn'), borderVisible: false,
+    priceFormat: { type: 'custom', formatter: (p) => fiyatYaz(p), minMove: 1e-12 },
+  });
+  pcHacimSeri = pcGrafik.addHistogramSeries({ priceScaleId: '', priceFormat: { type: 'volume' } });
+  pcHacimSeri.priceScale().applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+}
+
+async function pcGrafikCiz() {
+  if (!pcBilgi?.anaHavuz) { $('pc-grafik-kart').hidden = true; return; }
+  $('pc-grafik-kart').hidden = false;
+  const aralik = document.querySelector('input[name=pc-aralik]:checked').value;
+  const havuz = pcHavuz || pcBilgi.anaHavuz.adres;
+  $('pc-grafik-not').textContent = '· yükleniyor';
+  try {
+    const d = await api(`/api/pancake/mumlar?adres=${encodeURIComponent(pcBilgi.adres)}&havuz=${encodeURIComponent(havuz)}&aralik=${encodeURIComponent(aralik)}`);
+    pcGrafikKur();
+    if (!pcGrafik) { $('pc-grafik-not').textContent = '· grafik kütüphanesi yüklenemedi'; return; }
+    const artis = `${renk('--gain')}66`, dusus = `${renk('--warn')}66`;
+    pcMumSeri.setData(d.mumlar.map((m) => ({ time: m.zaman, open: m.acilis, high: m.yuksek, low: m.dusuk, close: m.kapanis })));
+    pcHacimSeri.setData(d.mumlar.map((m) => ({ time: m.zaman, value: m.hacim, color: m.kapanis >= m.acilis ? artis : dusus })));
+    pcGrafik.timeScale().fitContent();
+    const h = pcBilgi.havuzlar.find((x) => x.adres.toLowerCase() === String(d.havuz).toLowerCase());
+    $('pc-grafik-not').textContent = d.mumlar.length
+      ? `· ${h ? `${pcBilgi.sembol}/${h.karsi} ${h.surum.toUpperCase()}` : kisalt(d.havuz)} · ${d.mumlar.length} mum · USD`
+      : '· bu aralıkta işlem yok';
+  } catch (e) { $('pc-grafik-not').textContent = `· ${e.message}`; }
+}
+
+function pcAc(adres) {
+  pcAdres = adres;
+  pcHavuz = null;
+  depoYaz('pc-adres', adres);
+  pancakeYenile();
+}
+
+pcForm.onsubmit = (e) => {
+  e.preventDefault();
+  if (!pcForm.reportValidity()) return;
+  pcAc(pcForm.elements.adres.value.trim());
+};
+$('pc-fisten').onclick = () => {
+  const a = form.elements.token.value.trim();
+  if (/^0x[0-9a-fA-F]{40}$/.test(a)) pcAc(a);
+  else { pcForm.elements.adres.focus(); $('pc-durum').textContent = 'fişte geçerli bir token adresi yok'; }
+};
+$('pc-son').addEventListener('click', (e) => { const b = e.target.closest('[data-pc-adres]'); if (b) pcAc(b.dataset.pcAdres); });
+$('pc-icerik').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pc-islem]');
+  if (!b || !pcBilgi) return;
+  fisDoldur({ adres: pcBilgi.adres, yon: b.dataset.pcIslem, dex: 'pancake', token: { adres: pcBilgi.adres, sembol: pcBilgi.sembol, ad: pcBilgi.ad, piyasaDegeri: pcBilgi.piyasaDegeriUsd, holder: pcBilgi.holder } });
+});
+$('pc-havuzlar').addEventListener('click', (e) => {
+  if (e.target.closest('a')) return;
+  const r = e.target.closest('[data-pc-havuz]');
+  if (!r || !pcBilgi) return;
+  pcHavuz = r.dataset.pcHavuz;
+  pcCiz(pcBilgi);
+  pcGrafikCiz();
+});
+$('pc-aralik').addEventListener('change', pcGrafikCiz);
+// Tema değişince mum renkleri de yenilensin: grafik baştan kurulur
+addEventListener('tema-degisti', () => { if (!pcGrafik) return; pcGrafik.remove(); pcGrafik = null; if (pcGorunur()) pcGrafikCiz(); });
+// Görünüm açıkken fiyat 15 saniyede, grafik dakikada bir yenilenir
+setInterval(() => { if (pcGorunur() && pcAdres && !document.hidden) pancakeYenile({ sessiz: true }); }, 15_000);
+setInterval(() => { if (pcGorunur() && pcBilgi && !document.hidden) pcGrafikCiz(); }, 60_000);
 
 gorunumAc(depoOku('gorunum', 'siper'));
 durumYenile(); emirlerYenile(); siperYenile(); otoYenile();

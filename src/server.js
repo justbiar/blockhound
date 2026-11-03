@@ -16,6 +16,8 @@ import { FiyatServisi } from './fiyat.js';
 import { PortfoyServisi } from './portfoyServisi.js';
 import { FiyatEmirleri } from './fiyatEmirleri.js';
 import { islemlerOlustur } from './islemler.js';
+import { adresKontrol } from './guard.js';
+import { pancakeOlustur } from './pancake.js';
 import { Otomasyon } from './otomasyon.js';
 import { nftServisi } from './nft.js';
 import { JsonRpcProvider } from 'ethers';
@@ -50,7 +52,12 @@ const trader = new Trader({
   gunlukDosya: C.dataFile('gunluk-harcama.json'), kayitDosya: C.dataFile('emirler.jsonl'),
 });
 
-const islem = islemlerOlustur({ trader, baw, four });
+// PancakeSwap: fiyat / likidite / arz zincirden, grafik ve holder GeckoTerminal'den (fiyat servisinin sırasıyla), ilk 10 payı OKX'ten
+const pancakeProvider = new JsonRpcProvider(C.BSC_RPC, 56, { staticNetwork: true, batchMaxCount: 1 });
+const pancake = pancakeOlustur({
+  provider: pancakeProvider, gecko: (url) => portfoy.fiyat.gecko(url), okx: (args) => onchainosCalistir(args, { zamanAsimi: 20_000 }),
+});
+const islem = islemlerOlustur({ trader, baw, four, pancake, provider: pancakeProvider });
 // Bütün masaüstü bildirimleri buradan geçer: Ayarlar sekmesindeki tercihler uygulanır
 const bildirimler = new Bildirimler({ dosya: C.dataFile('bildirim.json') });
 
@@ -207,6 +214,7 @@ function yenidenBaslat() {
   setTimeout(() => process.exit(0), 300);
 }
 
+const adresParam = (a) => adresKontrol(String(a || '').trim(), 'adres');
 const kasaOnbellek = new Map();
 // GeckoTerminal token verisi: fiyat, hacim, likidite. Havuz yoksa alanlar boş döner
 async function tokenPiyasa(t) {
@@ -255,12 +263,19 @@ const rotalar = {
   'GET /api/siper': async () => ({ durum: tarayici.durum, ...tarayici.listeler }),
   'GET /api/siper/tars': async () => ({ durum: tarsTakip.durum, solUsd: tarsTakip.solUsd, ...tarsTakip.listeler }),
 
-  'POST /api/teklif': async (b) => islem.teklif({ yon: b.yon, token: b.token, miktar: b.miktar, kayma: b.kayma }),
+  'POST /api/teklif': async (b) => islem.teklif({ yon: b.yon, token: b.token, miktar: b.miktar, kayma: b.kayma, dex: b.dex === 'pancake' ? 'pancake' : null }),
+
+  'GET /api/pancake/token': async (_b, u) => pancake.bilgi(adresParam(u?.searchParams.get('adres'))),
+  'GET /api/pancake/mumlar': async (_b, u) => {
+    const havuz = u?.searchParams.get('havuz');
+    return pancake.mumlar(adresParam(u?.searchParams.get('adres')), { havuz: havuz ? adresParam(havuz) : null, aralik: String(u?.searchParams.get('aralik') || '1s') });
+  },
 
   'POST /api/emir': async (b) => {
     if (b.onay !== true) throw new Error('Emir için açık onay gerekli');
-    if (b.yon === 'al') return islem.al({ token: b.token, bnb: b.miktar, kayma: b.kayma, kaynak: 'manuel' });
-    if (b.yon === 'sat') return islem.sat({ token: b.token, miktar: b.miktar, kayma: b.kayma, kaynak: 'manuel' });
+    const dex = b.dex === 'pancake' ? 'pancake' : null;
+    if (b.yon === 'al') return islem.al({ token: b.token, bnb: b.miktar, kayma: b.kayma, kaynak: 'manuel', dex });
+    if (b.yon === 'sat') return islem.sat({ token: b.token, miktar: b.miktar, kayma: b.kayma, kaynak: 'manuel', dex });
     throw new Error('yon "al" ya da "sat" olmalı');
   },
 
