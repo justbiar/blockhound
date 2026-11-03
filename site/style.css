@@ -588,3 +588,11 @@ summary::after { font-family: var(--mono); }
 .token-yedek { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
 .token-onizleme.uc-boyut { background: transparent; border: 0 !important; overflow: visible; }
 .token-onizleme.uc-boyut .token-yedek { visibility: hidden; }
+
+/* Mint kartları: iki kart aynı satır ızgarasını paylaşır (subgrid). Açıklama bir kartta iki satıra taşsa da
+   önizleme, fiyat, ölçüler, dönem ve düğme iki kartta aynı hizada başlar */
+.mint-kartlar { grid-template-rows: repeat(6, auto); gap: 0 16px; }
+.mint-kart { display: grid; grid-row: span 6; grid-template-rows: subgrid; row-gap: 16px; align-content: start; }
+.mint-kart > .token-onizleme, .mint-kart > .nft-onizleme { justify-self: center; align-self: center; width: 220px; max-width: 100%; }
+.mint-kart > .madenci { margin-top: 0; align-self: start; }
+@media (max-width: 720px) { .mint-kartlar { row-gap: 16px; } }
